@@ -1,0 +1,15 @@
+2025-09-24 23:26:32,960 - chat_agi - INFO - Буфер обучения: 1/4
+2025-09-24 23:27:08,811 - chat_agi - INFO - Буфер обучения: 2/4
+2025-09-24 23:27:24,180 - chat_agi - INFO - Буфер обучения: 3/4
+2025-09-24 23:27:40,545 - chat_agi - INFO - 🚀 Начало обучения шаг 1 на 4 примерах...
+2025-09-24 23:30:18,107 - chat_agi - INFO - ✅ Обучение завершено! Loss: 2.146783769130707
+2025-09-24 23:45:24,317 - chat_agi - INFO - Буфер обучения: 1/4
+2025-09-24 23:45:49,663 - chat_agi - INFO - Буфер обучения: 2/4
+2025-09-24 23:46:09,839 - chat_agi - INFO - Буфер обучения: 3/4
+2025-09-24 23:46:30,833 - chat_agi - INFO - 🚀 Начало обучения шаг 1 на 4 примерах...
+2025-09-24 23:46:46,236 - chat_agi - ERROR - ❌ Ошибка обучения: CUDA out of memory. Tried to allocate 44.00 MiB. GPU 0 has a total capacity of 6.00 GiB of which 0 bytes is free. Of the allocated memory 12.60 GiB is allocated by PyTorch, and 85.99 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+2025-09-24 23:59:23,180 - chat_agi - INFO - Буфер обучения: 1/4
+2025-09-24 23:59:50,669 - chat_agi - INFO - Буфер обучения: 2/4
+2025-09-25 00:00:07,464 - chat_agi - INFO - Буфер обучения: 3/4
+2025-09-25 00:00:25,702 - chat_agi - INFO - 🚀 Начало обучения шаг 1 на 4 примерах...
+2025-09-25 00:00:35,813 - chat_agi - INFO - ✅ Обучение завершено! Loss: 1.7710477113723755
