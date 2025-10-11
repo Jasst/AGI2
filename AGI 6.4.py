@@ -9,7 +9,9 @@ AGI6.3_thought_engine.py
 - Внутренний диалог и голосование
 - Обучение структуре рассуждения
 - Мета-регуляция и рефлексия как цикл
+- Динамическое (онлайн) обучение после каждого шага
 """
+
 import os
 import re
 import random
@@ -35,7 +37,6 @@ except Exception:
 # ======================
 
 def clean_qwen_response(text: str) -> str:
-    """Очищает ответ нейросети от форматирования и избыточности."""
     if not isinstance(text, str):
         return "Хорошо."
     text = re.sub(r'\*{1,2}([^*]+)\*{1,2}', r'\1', text)
@@ -55,14 +56,12 @@ def clean_qwen_response(text: str) -> str:
     return text or "Хорошо."
 
 def safe_cell_name(base: str) -> str:
-    """Преобразует строку в безопасное имя клетки."""
     name = re.sub(r'[^a-zA-Zа-яА-Я0-9_]', '_', base)
     name = re.sub(r'_+', '_', name)
     name = name.strip('_')
     return name if name else "unknown"
 
 def clean_for_similarity(text: str) -> str:
-    """Упрощает текст для вычисления семантического сходства."""
     text = re.sub(r'[^\w\s]', ' ', text, flags=re.UNICODE)
     text = re.sub(r'\s+', ' ', text)
     return text.lower().strip()
@@ -75,7 +74,6 @@ TAGS = {"[SOC]", "[FCT]", "[CAU]", "[PRC]", "[OPN]", "[MET]", "[CRT]"}
 TAG_PATTERN = re.compile(r'\[(SOC|FCT|CAU|PRC|OPN|MET|CRT)\]')
 
 def classify_and_tag_response(text: str) -> str:
-    """Классифицирует и тегирует каждое предложение ответа."""
     if not text.strip():
         return "[SOC] Хорошо."
     text = clean_qwen_response(text)
@@ -107,7 +105,6 @@ def _detect_sentence_type(sentence: str) -> str:
     return "FCT"
 
 def detect_input_type(user_input: str) -> str:
-    """Определяет тип входного запроса пользователя."""
     s = user_input.lower().strip()
     if re.search(r'\b(привет|здравствуй|добрый день|как дела|пока)\b', s):
         return "SOC"
@@ -136,7 +133,6 @@ INPUT_TYPE_TO_STAGES = {
 }
 
 def get_allowed_stages(input_type: str) -> List[str]:
-    """Возвращает разрешённые этапы мышления для типа входа."""
     return INPUT_TYPE_TO_STAGES.get(input_type, ["social", "fact", "cause", "procedure", "opinion", "meta", "creative"])
 
 # ======================
@@ -144,7 +140,6 @@ def get_allowed_stages(input_type: str) -> List[str]:
 # ======================
 
 class GlobalThoughtState:
-    """Единое состояние, через которое клетки обмениваются информацией."""
     def __init__(self, batch_size: int, hidden_size: int, device: torch.device):
         self.batch_size = batch_size
         self.hidden_size = hidden_size
@@ -167,11 +162,10 @@ class GlobalThoughtState:
         self.confidence = 1.0
 
 # ======================
-# КОГНИТИВНАЯ КЛЕТКА (УЛУЧШЕННАЯ)
+# КОГНИТИВНАЯ КЛЕТКА
 # ======================
 
 class BrainCell(nn.Module):
-    """Когнитивная клетка - элемент мозга."""
     def __init__(self, cell_id: int, input_size: int, hidden_size: int, cell_type: str = "generic"):
         super().__init__()
         self.cell_id = cell_id
@@ -204,7 +198,6 @@ class BrainCell(nn.Module):
         }
 
     def propose_next_stage(self, current_stage: str) -> str:
-        """Предлагает следующий этап мышления."""
         candidates = self.stage_transition.get(current_stage, ["fact"])
         return random.choice(candidates)
 
@@ -231,7 +224,6 @@ class BrainCell(nn.Module):
 # ======================
 
 class ThoughtPlanner:
-    """Динамически строит последовательность этапов мышления."""
     def __init__(self, allowed_stages: List[str]):
         self.allowed_stages = allowed_stages[:]
         self.planned_stages = allowed_stages[:]
@@ -262,7 +254,6 @@ class ThoughtPlanner:
 # ======================
 
 class PrioritizedReplay:
-    """Буфер опыта с приоритетной выборкой."""
     def __init__(self, capacity: int = 5000, alpha: float = 0.6, eps: float = 1e-6):
         self.capacity = capacity
         self.alpha = alpha
@@ -321,7 +312,6 @@ class PrioritizedReplay:
 # ======================
 
 class MetaCognition:
-    """Мета-когнитивный модуль для рефлексии и оценки."""
     def __init__(self, vocab: Dict[str, int], network: Optional['CognitiveNetwork'] = None,
                  external_model_name: str = "all-MiniLM-L6-v2"):
         self.vocab = vocab
@@ -406,7 +396,6 @@ class MetaCognition:
 # ======================
 
 class CognitiveNetwork(nn.Module):
-    """Главная нейросеть мышления."""
     def __init__(self, vocab_size: int, embedding_dim: int = 256, hidden_size: int = 512, eos_token_id: int = 1,
                  device: Optional[torch.device] = None):
         super().__init__()
@@ -486,11 +475,9 @@ class CognitiveNetwork(nn.Module):
         x = token_emb
         self.global_thought_state = GlobalThoughtState(batch_size, self.hidden_size, self.device)
         planner = ThoughtPlanner(allowed_stages)
-
         for cycle in range(max_cycles):
             current_plan = planner.plan_next_cycle(self.cell_activations, self.global_thought_state.active_stages)
             stage_outputs = []
-
             for stage in current_plan:
                 stage_cells = [cid for cid in self.cells if stage in self.cells[cid].cell_type]
                 if not stage_cells:
@@ -505,13 +492,11 @@ class CognitiveNetwork(nn.Module):
                     self.cell_states[cid] = (new_hx, new_cx)
                     self.cell_activations[cid] = act
                     stage_outputs.append(cell_output)
-
             if stage_outputs:
                 mean_output = torch.mean(torch.stack(stage_outputs), dim=0)
                 dominant_stage = current_plan[0] if current_plan else "fact"
                 self.global_thought_state.update(mean_output, dominant_stage)
                 x = mean_output
-
         self.global_thought_state = None
         return self.final_proj(x)
 
@@ -738,11 +723,10 @@ class CognitiveNetwork(nn.Module):
             return None
 
 # ======================
-# УЧИТЕЛЬ
+# УЧИТЕЛЬ (с динамическим обучением)
 # ======================
 
 class BrainTeacher:
-    """Учитель — связывает мозг с внешней моделью и обучает."""
     def __init__(self, api_url: str = "http://localhost:1234/v1/chat/completions", device: Optional[torch.device] = None):
         self.api_url = api_url
         self.conversation_history: List[Dict[str, Any]] = []
@@ -774,9 +758,25 @@ class BrainTeacher:
     def _pad_batch(sequences: List[List[int]], pad_id: int = 0):
         lengths = [len(s) for s in sequences]
         max_len = max(lengths) if lengths else 0
-        padded = [s + [pad_id] * (max_len - len(s)) for s in sequences]
+        padded = [s + [pad_id] * (max_len - l) for s, l in zip(sequences, lengths)]
         mask = [[1] * l + [0] * (max_len - l) for l in lengths]
         return torch.tensor(padded, dtype=torch.long), torch.tensor(mask, dtype=torch.long), lengths
+
+    def teach_online_step(self, brain: CognitiveNetwork, input_seq: List[int], target_seq: List[int], vocab: Dict[str, int], ivocab: Dict[int, str], allowed_stages: List[str]):
+        input_tensor = torch.tensor([input_seq], dtype=torch.long, device=brain.device)
+        target_tensor = torch.tensor([target_seq], dtype=torch.long, device=brain.device)
+        attn_mask = torch.ones_like(input_tensor, dtype=torch.long, device=brain.device)
+        brain.train()
+        optimizer = torch.optim.AdamW(brain.parameters(), lr=2e-4, weight_decay=1e-6)
+        optimizer.zero_grad()
+        logits = brain.process_sequence(input_tensor, attention_mask=attn_mask, allowed_stages=allowed_stages)
+        loss = brain.compute_weighted_loss(logits, target_tensor, vocab, ivocab)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(brain.parameters(), 0.8)
+        optimizer.step()
+        brain.eval()
+        print(f"🔥 Онлайн-потеря: {loss.item():.4f}")
+        return loss.item()
 
     def teach_brain(self, brain: CognitiveNetwork, user_input: str, vocab: Dict[str, int], ivocab: Dict[int, str],
                     epochs: int = 3, batch_size: int = 12):
@@ -796,6 +796,9 @@ class BrainTeacher:
         target_seq = full_seq[1:]
         priority = 2.0 if "[MET]" in tagged_qwen or "рефлексия" in user_input.lower() else 1.0
         brain.replay.add(input_seq, target_seq, meta={"qwen": tagged_qwen}, priority=priority)
+        # --- Динамическое онлайн-обучение на свежем шаге ---
+        self.teach_online_step(brain, input_seq, target_seq, vocab, ivocab, allowed_stages)
+        # --- Пакетное обучение на буфере воспроизведения ---
         samples, idxs, is_weights = brain.replay.sample(batch_size - 1, beta=0.4) if len(brain.replay) > 1 else ([], [], [])
         batch_inputs = [input_seq] + [s['input'] for s in samples]
         batch_targets = [target_seq] + [s['target'] for s in samples]
@@ -803,8 +806,6 @@ class BrainTeacher:
                               key=lambda x: len(x[0]), reverse=True)
         batch_inputs_sorted = [p[0] for p in sorted_pairs]
         batch_targets_sorted = [p[1] for p in sorted_pairs]
-        importance_weights = [p[2] for p in sorted_pairs]
-        sample_idxs = [p[3] for p in sorted_pairs]
         input_tensor, attn_mask, _ = self._pad_batch(batch_inputs_sorted, pad_id=0)
         target_tensor, _, _ = self._pad_batch(batch_targets_sorted, pad_id=0)
         input_tensor = input_tensor.to(brain.device)
@@ -822,7 +823,7 @@ class BrainTeacher:
             optimizer.step()
             total_loss += loss.item()
         avg_loss = total_loss / epochs
-        print(f"📚 Потеря: {avg_loss:.4f}")
+        print(f"📚 Батч-потеря: {avg_loss:.4f}")
         brain.eval()
         with torch.no_grad():
             brain_tokens = brain.generate_sequence(

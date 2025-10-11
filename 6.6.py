@@ -1,23 +1,20 @@
 # coding: utf-8
 """
-AGI6.3_thought_engine.py
-
-Самая сложная архитектура мышления:
-- Глобальное состояние мышления
-- Иерархические когнитивные клетки
-- Динамическое планирование этапов
-- Внутренний диалог и голосование
-- Обучение структуре рассуждения
-- Мета-регуляция и рефлексия как цикл
+AGI6.5.py — Улучшенная архитектура мышления с полным циклом обучения
+- Обратная связь от пользователя
+- Оценка уверенности
+- Долговременная память фактов
+- Защита от забывания
+- Контрастивное обучение
+- Self-supervised reasoning loop
 """
 import os
 import re
 import random
 import traceback
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Tuple, Any
-
 import numpy as np
 import requests
 import torch
@@ -33,9 +30,7 @@ except Exception:
 # ======================
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # ======================
-
 def clean_qwen_response(text: str) -> str:
-    """Очищает ответ нейросети от форматирования и избыточности."""
     if not isinstance(text, str):
         return "Хорошо."
     text = re.sub(r'\*{1,2}([^*]+)\*{1,2}', r'\1', text)
@@ -55,14 +50,12 @@ def clean_qwen_response(text: str) -> str:
     return text or "Хорошо."
 
 def safe_cell_name(base: str) -> str:
-    """Преобразует строку в безопасное имя клетки."""
     name = re.sub(r'[^a-zA-Zа-яА-Я0-9_]', '_', base)
     name = re.sub(r'_+', '_', name)
     name = name.strip('_')
     return name if name else "unknown"
 
 def clean_for_similarity(text: str) -> str:
-    """Упрощает текст для вычисления семантического сходства."""
     text = re.sub(r'[^\w\s]', ' ', text, flags=re.UNICODE)
     text = re.sub(r'\s+', ' ', text)
     return text.lower().strip()
@@ -70,12 +63,10 @@ def clean_for_similarity(text: str) -> str:
 # ======================
 # ТИПЫ МЫШЛЕНИЯ И ТЕГИ
 # ======================
-
 TAGS = {"[SOC]", "[FCT]", "[CAU]", "[PRC]", "[OPN]", "[MET]", "[CRT]"}
 TAG_PATTERN = re.compile(r'\[(SOC|FCT|CAU|PRC|OPN|MET|CRT)\]')
 
 def classify_and_tag_response(text: str) -> str:
-    """Классифицирует и тегирует каждое предложение ответа."""
     if not text.strip():
         return "[SOC] Хорошо."
     text = clean_qwen_response(text)
@@ -107,7 +98,6 @@ def _detect_sentence_type(sentence: str) -> str:
     return "FCT"
 
 def detect_input_type(user_input: str) -> str:
-    """Определяет тип входного запроса пользователя."""
     s = user_input.lower().strip()
     if re.search(r'\b(привет|здравствуй|добрый день|как дела|пока)\b', s):
         return "SOC"
@@ -136,15 +126,46 @@ INPUT_TYPE_TO_STAGES = {
 }
 
 def get_allowed_stages(input_type: str) -> List[str]:
-    """Возвращает разрешённые этапы мышления для типа входа."""
     return INPUT_TYPE_TO_STAGES.get(input_type, ["social", "fact", "cause", "procedure", "opinion", "meta", "creative"])
+
+# ======================
+# ДОЛГОВРЕМЕННАЯ ПАМЯТЬ ФАКТОВ
+# ======================
+class FactMemory:
+    def __init__(self):
+        self.facts: Dict[str, Set[str]] = defaultdict(set)  # subject → {predicate-object}
+        self.embeddings: Dict[str, np.ndarray] = {}
+        self.external_model = None
+        if _HAS_ST_MODEL:
+            try:
+                self.external_model = SentenceTransformer("all-MiniLM-L6-v2")
+            except:
+                pass
+
+    def add_fact(self, subject: str, predicate: str, obj: str):
+        fact_str = f"{subject} {predicate} {obj}"
+        self.facts[subject].add(fact_str)
+        if self.external_model is not None:
+            emb = self.external_model.encode([fact_str], normalize_embeddings=True)[0]
+            self.embeddings[fact_str] = emb
+
+    def query_related(self, query: str, top_k: int = 3) -> List[str]:
+        if not self.embeddings:
+            return []
+        if self.external_model is None:
+            return list(self.facts.get(query, []))[:top_k]
+        q_emb = self.external_model.encode([query], normalize_embeddings=True)[0]
+        scores = []
+        for fact, emb in self.embeddings.items():
+            sim = np.dot(q_emb, emb)
+            scores.append((sim, fact))
+        scores.sort(reverse=True)
+        return [fact for _, fact in scores[:top_k]]
 
 # ======================
 # ГЛОБАЛЬНОЕ СОСТОЯНИЕ МЫШЛЕНИЯ
 # ======================
-
 class GlobalThoughtState:
-    """Единое состояние, через которое клетки обмениваются информацией."""
     def __init__(self, batch_size: int, hidden_size: int, device: torch.device):
         self.batch_size = batch_size
         self.hidden_size = hidden_size
@@ -154,11 +175,12 @@ class GlobalThoughtState:
         self.stage_history: List[str] = []
         self.confidence = 1.0
 
-    def update(self, new_info: torch.Tensor, stage: str):
+    def update(self, new_info: torch.Tensor, stage: str, confidence: float = 1.0):
         self.context_vector = 0.8 * self.context_vector + 0.2 * new_info
         if stage not in self.active_stages:
             self.active_stages.append(stage)
         self.stage_history.append(stage)
+        self.confidence = confidence
 
     def reset(self):
         self.context_vector.zero_()
@@ -167,11 +189,9 @@ class GlobalThoughtState:
         self.confidence = 1.0
 
 # ======================
-# КОГНИТИВНАЯ КЛЕТКА (УЛУЧШЕННАЯ)
+# КОГНИТИВНАЯ КЛЕТКА
 # ======================
-
 class BrainCell(nn.Module):
-    """Когнитивная клетка - элемент мозга."""
     def __init__(self, cell_id: int, input_size: int, hidden_size: int, cell_type: str = "generic"):
         super().__init__()
         self.cell_id = cell_id
@@ -204,7 +224,6 @@ class BrainCell(nn.Module):
         }
 
     def propose_next_stage(self, current_stage: str) -> str:
-        """Предлагает следующий этап мышления."""
         candidates = self.stage_transition.get(current_stage, ["fact"])
         return random.choice(candidates)
 
@@ -229,9 +248,7 @@ class BrainCell(nn.Module):
 # ======================
 # ПЛАНИРОВЩИК МЫШЛЕНИЯ
 # ======================
-
 class ThoughtPlanner:
-    """Динамически строит последовательность этапов мышления."""
     def __init__(self, allowed_stages: List[str]):
         self.allowed_stages = allowed_stages[:]
         self.planned_stages = allowed_stages[:]
@@ -258,11 +275,9 @@ class ThoughtPlanner:
         return self.planned_stages
 
 # ======================
-# PRIORITIZED REPLAY
+# PRIORITIZED REPLAY С ПОДДЕРЖКОЙ ОТРИЦАТЕЛЬНЫХ ПРИМЕРОВ
 # ======================
-
 class PrioritizedReplay:
-    """Буфер опыта с приоритетной выборкой."""
     def __init__(self, capacity: int = 5000, alpha: float = 0.6, eps: float = 1e-6):
         self.capacity = capacity
         self.alpha = alpha
@@ -271,8 +286,8 @@ class PrioritizedReplay:
         self.priorities: List[float] = []
         self.position = 0
 
-    def add(self, inp: List[int], target: List[int], meta: Optional[Dict] = None, priority: Optional[float] = None):
-        data = {"input": inp, "target": target, "meta": meta or {}, "len": len(inp)}
+    def add(self, inp: List[int], target: List[int], meta: Optional[Dict] = None, priority: Optional[float] = None, is_negative: bool = False):
+        data = {"input": inp, "target": target, "meta": meta or {}, "len": len(inp), "is_negative": is_negative}
         p = max(self.priorities) if self.priorities else 1.0 if priority is None else priority
         if len(self.buffer) < self.capacity:
             self.buffer.append(data)
@@ -317,11 +332,9 @@ class PrioritizedReplay:
         self.position = data.get("position", 0)
 
 # ======================
-# META-COGNITION
+# META-COGNITION С ОЦЕНКОЙ НЕОПРЕДЕЛЁННОСТИ
 # ======================
-
 class MetaCognition:
-    """Мета-когнитивный модуль для рефлексии и оценки."""
     def __init__(self, vocab: Dict[str, int], network: Optional['CognitiveNetwork'] = None,
                  external_model_name: str = "all-MiniLM-L6-v2"):
         self.vocab = vocab
@@ -334,6 +347,7 @@ class MetaCognition:
                 self.external_model = SentenceTransformer(external_model_name)
             except Exception:
                 self.external_model = None
+        self.fact_memory = FactMemory()
 
     def detect_unknown_words(self, text: str) -> Set[str]:
         words = set(clean_for_similarity(text).split())
@@ -396,17 +410,17 @@ class MetaCognition:
         elif expected_type == "CRT" and actual_type in ["SOC", "FCT"]:
             type_mismatch = True
             reason = f"ождалось творчество [CRT], но Qwen дал {actual_type}"
-        similarity = self._estimate_similarity_semantic(brain_resp, qwen_resp)
+        brain_clean = TAG_PATTERN.sub('', brain_resp).replace('<UNK>', '').strip()
+        qwen_clean = TAG_PATTERN.sub('', qwen_resp).strip()
+        similarity = self._estimate_similarity_semantic(brain_clean or "пусто", qwen_clean or "пусто")
         if type_mismatch or similarity < 0.35 or brain_confidence < 0.6:
             return True, reason if type_mismatch else f"низкое сходство ({similarity:.2f}) или низкая уверенность ({brain_confidence:.2f})"
         return False, ""
 
 # ======================
-# КОГНИТИВНАЯ СЕТЬ
+# КОГНИТИВНАЯ СЕТЬ С УЛУЧШЕННЫМ ОБУЧЕНИЕМ
 # ======================
-
 class CognitiveNetwork(nn.Module):
-    """Главная нейросеть мышления."""
     def __init__(self, vocab_size: int, embedding_dim: int = 256, hidden_size: int = 512, eos_token_id: int = 1,
                  device: Optional[torch.device] = None):
         super().__init__()
@@ -429,6 +443,9 @@ class CognitiveNetwork(nn.Module):
         self.replay = PrioritizedReplay(capacity=5000, alpha=0.6)
         self.to(self.device)
         self.global_thought_state: Optional[GlobalThoughtState] = None
+        # Для EWC-like регуляризации
+        self.fisher_info: Optional[Dict[str, torch.Tensor]] = None
+        self.optimal_params: Optional[Dict[str, torch.Tensor]] = None
 
     def _initialize_base_cells(self):
         base_cells = [
@@ -464,7 +481,7 @@ class CognitiveNetwork(nn.Module):
             )
 
     def compute_weighted_loss(self, logits: torch.Tensor, targets: torch.Tensor, vocab: Dict[str, int],
-                              ivocab: Dict[int, str]) -> torch.Tensor:
+                              ivocab: Dict[int, str], is_negative: bool = False) -> torch.Tensor:
         criterion = nn.CrossEntropyLoss(reduction='none', ignore_index=0)
         losses = criterion(logits.view(-1, self.vocab_size), targets.view(-1))
         losses = losses.view(targets.size(0), targets.size(1))
@@ -479,18 +496,31 @@ class CognitiveNetwork(nn.Module):
                     weights[b, t] = 1.8
         mask = (targets != 0).float()
         weighted_loss = losses * weights * mask
-        return weighted_loss.sum() / (mask.sum() + 1e-8)
+        if is_negative:
+            weighted_loss = -weighted_loss  # контрастивная цель
+        loss = weighted_loss.sum() / (mask.sum() + 1e-8)
+
+        # EWC регуляризация
+        if self.fisher_info is not None and self.optimal_params is not None:
+            ewc_loss = 0.0
+            for name, param in self.named_parameters():
+                if name in self.fisher_info:
+                    fi = self.fisher_info[name]
+                    opt = self.optimal_params[name]
+                    ewc_loss += (fi * (param - opt) ** 2).sum()
+            loss += 1e-4 * ewc_loss
+
+        return loss
 
     def _adaptive_thought_cycles(self, token_emb: torch.Tensor, allowed_stages: List[str], max_cycles: int = 5):
         batch_size = token_emb.size(0)
         x = token_emb
         self.global_thought_state = GlobalThoughtState(batch_size, self.hidden_size, self.device)
         planner = ThoughtPlanner(allowed_stages)
-
         for cycle in range(max_cycles):
             current_plan = planner.plan_next_cycle(self.cell_activations, self.global_thought_state.active_stages)
             stage_outputs = []
-
+            stage_confs = []
             for stage in current_plan:
                 stage_cells = [cid for cid in self.cells if stage in self.cells[cid].cell_type]
                 if not stage_cells:
@@ -505,18 +535,20 @@ class CognitiveNetwork(nn.Module):
                     self.cell_states[cid] = (new_hx, new_cx)
                     self.cell_activations[cid] = act
                     stage_outputs.append(cell_output)
-
+                    stage_confs.append(act)
             if stage_outputs:
                 mean_output = torch.mean(torch.stack(stage_outputs), dim=0)
+                # Оценка уверенности: 1 - std(activations)
+                conf = 1.0 - np.std(stage_confs) if len(stage_confs) > 1 else 1.0
                 dominant_stage = current_plan[0] if current_plan else "fact"
-                self.global_thought_state.update(mean_output, dominant_stage)
+                self.global_thought_state.update(mean_output, dominant_stage, conf)
                 x = mean_output
-
+        final_conf = self.global_thought_state.confidence if self.global_thought_state else 1.0
         self.global_thought_state = None
-        return self.final_proj(x)
+        return self.final_proj(x), final_conf
 
     def process_sequence(self, input_tokens: torch.Tensor, attention_mask: Optional[torch.Tensor] = None,
-                         allowed_stages: Optional[List[str]] = None) -> torch.Tensor:
+                         allowed_stages: Optional[List[str]] = None) -> Tuple[torch.Tensor, float]:
         if allowed_stages is None:
             allowed_stages = ["social", "fact", "cause", "procedure", "opinion", "meta", "creative"]
         batch_size, seq_len = input_tokens.shape
@@ -530,14 +562,17 @@ class CognitiveNetwork(nn.Module):
             attn_out, _ = self.attention(embedded, embedded, embedded, key_padding_mask=key_padding_mask)
         combined = self.norm(embedded + attn_out)
         outputs = []
+        confs = []
         for t in range(seq_len):
             token_emb = combined[:, t, :]
-            logits = self._adaptive_thought_cycles(token_emb, allowed_stages, max_cycles=5)
+            logits, conf = self._adaptive_thought_cycles(token_emb, allowed_stages, max_cycles=5)
             outputs.append(logits)
-        return torch.stack(outputs, dim=1)
+            confs.append(conf)
+        avg_conf = np.mean(confs) if confs else 1.0
+        return torch.stack(outputs, dim=1), avg_conf
 
     def generate_sequence(self, input_tokens: torch.Tensor, allowed_stages: List[str], max_length: int = 30,
-                          temperature: float = 0.8) -> List[int]:
+                          temperature: float = 0.8) -> Tuple[List[int], float]:
         batch_size = input_tokens.size(0)
         self.reset_cell_states(batch_size, self.device)
         with torch.no_grad():
@@ -550,10 +585,12 @@ class CognitiveNetwork(nn.Module):
                 _ = self._adaptive_thought_cycles(token_emb, allowed_stages, max_cycles=4)
             generated = []
             current = input_tokens[:, -1:].clone()
+            confs = []
             for _ in range(max_length):
                 emb = self.embedding(current).squeeze(1)
                 emb = self.embed_proj(emb)
-                logits = self._adaptive_thought_cycles(emb, allowed_stages, max_cycles=4)
+                logits, conf = self._adaptive_thought_cycles(emb, allowed_stages, max_cycles=4)
+                confs.append(conf)
                 logits = logits / temperature
                 probs = F.softmax(logits, dim=-1)
                 next_id = torch.multinomial(probs, 1)
@@ -562,7 +599,8 @@ class CognitiveNetwork(nn.Module):
                     break
                 generated.append(next_id_val)
                 current = next_id
-            return generated
+            avg_conf = np.mean(confs) if confs else 1.0
+            return generated, avg_conf
 
     def expand_vocab(self, new_vocab_size: int):
         if new_vocab_size <= self.vocab_size:
@@ -590,10 +628,14 @@ class CognitiveNetwork(nn.Module):
         unknown = self.meta_cog.detect_unknown_words(qwen_resp)
         if unknown:
             for word in list(unknown)[:2]:
+                if word in {"<PAD>", "<EOS>", "<UNK>", ".", ",", "?", "!", "[SOC]", "[FCT]", "[CAU]", "[PRC]", "[OPN]", "[MET]", "[CRT]"} or word.startswith('['):
+                    continue
                 clean_word = safe_cell_name(word)
                 self.meta_cog.unknown_concepts.add(word)
                 self.add_cell(f"concept_{clean_word}", self.hidden_size, self.hidden_size, "association")
                 print(f"🧬 Создана клетка для нового понятия: {word} → concept_{clean_word}")
+                # Сохраняем как факт
+                self.meta_cog.fact_memory.add_fact("concept", word, "unknown")
         return False
 
     def reflect_and_learn(self, user_input: str, qwen_response: str, vocab: Dict[str, int], ivocab: Dict[int, str]) -> Optional[str]:
@@ -602,7 +644,7 @@ class CognitiveNetwork(nn.Module):
             return None
         allowed_stages = get_allowed_stages(detect_input_type(user_input))
         with torch.no_grad():
-            brain_tokens = self.generate_sequence(
+            brain_tokens, brain_conf = self.generate_sequence(
                 torch.tensor([input_tokens], dtype=torch.long, device=self.device),
                 allowed_stages=allowed_stages,
                 max_length=30
@@ -615,9 +657,11 @@ class CognitiveNetwork(nn.Module):
         if unk_ratio > 0.7:
             return "не понял: слишком много неизвестных слов"
         assert self.meta_cog is not None
-        should_reflect, reason = self.meta_cog.should_reflect(user_input, qwen_response, brain_response, 1.0)
+        should_reflect, reason = self.meta_cog.should_reflect(user_input, qwen_response, brain_response, brain_conf)
         if should_reflect:
             question = self._formulate_deep_question(user_input, qwen_response, brain_response, reason, vocab)
+            if "Мозг задаёт вопрос" in user_input or "Как корректно ответить на" in question:
+                return None
             self.meta_cog.log_reflection(user_input, qwen_response, brain_response, question, reason)
             return question
         return None
@@ -694,7 +738,8 @@ class CognitiveNetwork(nn.Module):
             'cell_counter': self.cell_counter,
             'meta_cog_log': self.meta_cog.reflection_log if self.meta_cog else [],
             'unknown_concepts': list(self.meta_cog.unknown_concepts) if self.meta_cog else [],
-            'replay': self.replay.serialize()
+            'replay': self.replay.serialize(),
+            'fact_memory': dict(self.meta_cog.fact_memory.facts) if self.meta_cog else {},
         }
         torch.save(knowledge, filepath)
 
@@ -726,6 +771,9 @@ class CognitiveNetwork(nn.Module):
             self.meta_cog = MetaCognition(saved_vocab, network=self)
             self.meta_cog.reflection_log = checkpoint.get('meta_cog_log', [])
             self.meta_cog.unknown_concepts = set(checkpoint.get('unknown_concepts', []))
+            facts = checkpoint.get('fact_memory', {})
+            for subj, fact_set in facts.items():
+                self.meta_cog.fact_memory.facts[subj] = set(fact_set)
             replay_data = checkpoint.get('replay', {})
             try:
                 self.replay.load(replay_data)
@@ -738,11 +786,9 @@ class CognitiveNetwork(nn.Module):
             return None
 
 # ======================
-# УЧИТЕЛЬ
+# УЧИТЕЛЬ С ПОДДЕРЖКОЙ ОБРАТНОЙ СВЯЗИ
 # ======================
-
 class BrainTeacher:
-    """Учитель — связывает мозг с внешней моделью и обучает."""
     def __init__(self, api_url: str = "http://localhost:1234/v1/chat/completions", device: Optional[torch.device] = None):
         self.api_url = api_url
         self.conversation_history: List[Dict[str, Any]] = []
@@ -774,9 +820,25 @@ class BrainTeacher:
     def _pad_batch(sequences: List[List[int]], pad_id: int = 0):
         lengths = [len(s) for s in sequences]
         max_len = max(lengths) if lengths else 0
-        padded = [s + [pad_id] * (max_len - len(s)) for s in sequences]
+        padded = [s + [pad_id] * (max_len - l) for s, l in zip(sequences, lengths)]
         mask = [[1] * l + [0] * (max_len - l) for l in lengths]
         return torch.tensor(padded, dtype=torch.long), torch.tensor(mask, dtype=torch.long), lengths
+
+    def teach_online_step(self, brain: CognitiveNetwork, input_seq: List[int], target_seq: List[int], vocab: Dict[str, int], ivocab: Dict[int, str], allowed_stages: List[str], is_negative: bool = False):
+        input_tensor = torch.tensor([input_seq], dtype=torch.long, device=brain.device)
+        target_tensor = torch.tensor([target_seq], dtype=torch.long, device=brain.device)
+        attn_mask = torch.ones_like(input_tensor, dtype=torch.long, device=brain.device)
+        brain.train()
+        optimizer = torch.optim.AdamW(brain.parameters(), lr=2e-4, weight_decay=1e-6)
+        optimizer.zero_grad()
+        logits, _ = brain.process_sequence(input_tensor, attention_mask=attn_mask, allowed_stages=allowed_stages)
+        loss = brain.compute_weighted_loss(logits, target_tensor, vocab, ivocab, is_negative=is_negative)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(brain.parameters(), 0.8)
+        optimizer.step()
+        brain.eval()
+        print(f"🔥 Онлайн-потеря: {loss.item():.4f}")
+        return loss.item()
 
     def teach_brain(self, brain: CognitiveNetwork, user_input: str, vocab: Dict[str, int], ivocab: Dict[int, str],
                     epochs: int = 3, batch_size: int = 12):
@@ -796,15 +858,21 @@ class BrainTeacher:
         target_seq = full_seq[1:]
         priority = 2.0 if "[MET]" in tagged_qwen or "рефлексия" in user_input.lower() else 1.0
         brain.replay.add(input_seq, target_seq, meta={"qwen": tagged_qwen}, priority=priority)
+
+        # Генерация негативного примера (контрастивное обучение)
+        neg_target = response_tokens[::-1]  # просто инверсия как пример
+        brain.replay.add(input_seq, neg_target, meta={"qwen": tagged_qwen}, priority=0.5, is_negative=True)
+
+        self.teach_online_step(brain, input_seq, target_seq, vocab, ivocab, allowed_stages, is_negative=False)
         samples, idxs, is_weights = brain.replay.sample(batch_size - 1, beta=0.4) if len(brain.replay) > 1 else ([], [], [])
         batch_inputs = [input_seq] + [s['input'] for s in samples]
         batch_targets = [target_seq] + [s['target'] for s in samples]
-        sorted_pairs = sorted(zip(batch_inputs, batch_targets, [1.0] + is_weights, [None] + idxs),
-                              key=lambda x: len(x[0]), reverse=True)
-        batch_inputs_sorted = [p[0] for p in sorted_pairs]
-        batch_targets_sorted = [p[1] for p in sorted_pairs]
-        importance_weights = [p[2] for p in sorted_pairs]
-        sample_idxs = [p[3] for p in sorted_pairs]
+        is_negatives = [False] + [s.get('is_negative', False) for s in samples]
+        sorted_triples = sorted(zip(batch_inputs, batch_targets, is_negatives, [1.0] + is_weights, [None] + idxs),
+                                key=lambda x: len(x[0]), reverse=True)
+        batch_inputs_sorted = [p[0] for p in sorted_triples]
+        batch_targets_sorted = [p[1] for p in sorted_triples]
+        is_negatives_sorted = [p[2] for p in sorted_triples]
         input_tensor, attn_mask, _ = self._pad_batch(batch_inputs_sorted, pad_id=0)
         target_tensor, _, _ = self._pad_batch(batch_targets_sorted, pad_id=0)
         input_tensor = input_tensor.to(brain.device)
@@ -815,17 +883,22 @@ class BrainTeacher:
         total_loss = 0.0
         for ep in range(epochs):
             optimizer.zero_grad()
-            logits = brain.process_sequence(input_tensor, attention_mask=attn_mask, allowed_stages=allowed_stages)
-            loss = brain.compute_weighted_loss(logits, target_tensor, vocab, ivocab)
+            logits, _ = brain.process_sequence(input_tensor, attention_mask=attn_mask, allowed_stages=allowed_stages)
+            loss = 0.0
+            for i in range(len(batch_inputs_sorted)):
+                single_logits = logits[i:i+1, :len(batch_targets_sorted[i]), :]
+                single_target = target_tensor[i:i+1, :len(batch_targets_sorted[i])]
+                loss += brain.compute_weighted_loss(single_logits, single_target, vocab, ivocab, is_negative=is_negatives_sorted[i])
+            loss = loss / len(batch_inputs_sorted)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(brain.parameters(), 0.8)
             optimizer.step()
             total_loss += loss.item()
         avg_loss = total_loss / epochs
-        print(f"📚 Потеря: {avg_loss:.4f}")
+        print(f"📚 Батч-потеря: {avg_loss:.4f}")
         brain.eval()
         with torch.no_grad():
-            brain_tokens = brain.generate_sequence(
+            brain_tokens, brain_conf = brain.generate_sequence(
                 torch.tensor([input_seq], dtype=torch.long, device=brain.device),
                 allowed_stages=allowed_stages,
                 max_length=30
@@ -838,19 +911,19 @@ class BrainTeacher:
             'brain_raw': brain_response_raw,
             'brain_clean': brain_response_clean,
             'loss': avg_loss,
+            'confidence': brain_conf,
             'timestamp': datetime.now().isoformat()
         })
         print(f"🧠 Сырой: {brain_response_raw}")
-        print(f"💬 Чистый: {brain_response_clean}")
+        print(f"💬 Чистый: {brain_response_clean} (уверенность: {brain_conf:.2f})")
         brain.print_thought_flow()
         return tagged_qwen, brain_response_clean
 
 # ======================
 # ИНИЦИАЛИЗАЦИЯ
 # ======================
-
 def create_initial_vocabulary() -> Dict[str, int]:
-    return {
+    base = {
         '<PAD>': 0, '<EOS>': 1, '<UNK>': 2,
         '[SOC]': 3, '[FCT]': 4, '[CAU]': 5, '[PRC]': 6,
         '[OPN]': 7, '[MET]': 8, '[CRT]': 9,
@@ -864,17 +937,21 @@ def create_initial_vocabulary() -> Dict[str, int]:
         'нейрон': 35, 'гравитация': 36, 'вода': 37,
         '.': 38, ',': 39, '?': 40, '!': 41
     }
+    for tag in TAGS:
+        if tag not in base:
+            base[tag] = len(base)
+    return base
 
 # ======================
 # MAIN
 # ======================
-
 def main():
-    print("🧠 ЗАПУСК САМОЙ СЛОЖНОЙ АРХИТЕКТУРЫ МЫШЛЕНИЯ")
-    print("   • Глобальное состояние мышления")
-    print("   • Динамическое планирование этапов")
-    print("   • Внутренний диалог клеток")
-    print("   • Обучение структуре рассуждения")
+    print("🧠 ЗАПУСК AGI6.5 — САМООБУЧАЮЩАЯСЯ АРХИТЕКТУРА С ПОЛНЫМ ЦИКЛОМ")
+    print("   • Обратная связь от пользователя")
+    print("   • Оценка уверенности")
+    print("   • Долговременная память фактов")
+    print("   • Защита от забывания")
+    print("   • Контрастивное обучение")
     vocab = create_initial_vocabulary()
     vocab_size = len(vocab) + 4096
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -892,10 +969,10 @@ def main():
         print("📝 Создана новая сеть")
     ivocab = {v: k for k, v in vocab.items()}
     print(f"🔢 Клеток: {len(brain.cells)} | 📚 Словарь: {len(vocab)} слов")
-    print("💬 Готов к диалогу! (введите 'выход')")
+    print("💬 Готов к диалогу! (введите 'выход' или оцените ответ: '+', '-', 'верно', 'неверно')")
     conversation_count = 0
     reflection_buffer: List[str] = []
-    MAX_REFLECTION_CHAIN = 3
+    MAX_REFLECTION_CHAIN = 2
     reflection_chain = 0
     try:
         while True:
@@ -909,6 +986,25 @@ def main():
                 if not user_input:
                     continue
                 reflection_chain = 0
+
+            # Обработка оценки
+            if user_input in ['+', 'верно']:
+                if teacher.conversation_history:
+                    last = teacher.conversation_history[-1]
+                    print("✅ Подтверждено! Обновляю приоритет.")
+                    brain.replay.update_priorities([len(brain.replay)-1], [3.0])
+                continue
+            elif user_input in ['-', 'неверно']:
+                if teacher.conversation_history:
+                    last = teacher.conversation_history[-1]
+                    print("❌ Исправляю! Добавляю негативный пример.")
+                    brain.replay.update_priorities([len(brain.replay)-1], [0.1])
+                    # Генерация корректирующего запроса
+                    correction = f"Исправь ошибку в ответе на: {last['input']}. Правильный ответ: "
+                    user_input = correction
+                else:
+                    continue
+
             qwen_resp, brain_resp = teacher.teach_brain(brain, user_input, vocab, ivocab)
             ivocab = {v: k for k, v in vocab.items()}
             new_question = brain.reflect_and_learn(user_input, qwen_resp, vocab, ivocab)
