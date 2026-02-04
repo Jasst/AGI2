@@ -2028,7 +2028,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ================= ГЛАВНАЯ ФУНКЦИЯ =================
 
 async def main():
-    """Основная функция запуска бота — ИСПРАВЛЕНА ДЛЯ PYTHON 3.13"""
+    """Основная асинхронная функция запуска бота — СОВМЕСТИМО С PYTHON 3.13"""
     print("=" * 70)
     print("🚀 ЗАПУСК AGI24 КОГНИТИВНОГО АГЕНТА С TELEGRAM ИНТЕРФЕЙСОМ")
     print("=" * 70)
@@ -2039,7 +2039,7 @@ async def main():
     )
 
     try:
-        # ✅ ПРАВИЛЬНОЕ ПОЛУЧЕНИЕ ТОКЕНА ЧЕРЕЗ CONFIG
+        # ✅ ПОЛУЧЕНИЕ ТОКЕНА ЧЕРЕЗ CONFIG (без глобальной переменной)
         token = Config.get_telegram_token()
         print(f"✅ Токен Telegram получен: {token[:15]}...")
 
@@ -2047,24 +2047,12 @@ async def main():
         app = ApplicationBuilder().token(token).build()
 
         # Регистрация обработчиков
-        command_handlers = [
-            ("start", start_command),
-            ("help", help_command),
-            ("stats", stats_command),
-            ("think", think_command),
-            ("analyze", analyze_command),
-            ("goals", goals_command),
-            ("patterns", patterns_command),
-            ("insights", insights_command),
-            ("facts", facts_command),
-            ("clear", clear_command),
-            ("ping", ping_command)
-        ]
-        for command, handler in command_handlers:
-            app.add_handler(CommandHandler(command, handler))
-
-        app.add_handler(CallbackQueryHandler(button_callback))
+        app.add_handler(CommandHandler("start", start_command))
+        app.add_handler(CommandHandler("help", help_command))
+        app.add_handler(CommandHandler("clear", clear_history))
+        app.add_handler(CommandHandler("stats", show_stats))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+        app.add_handler(MessageHandler(filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.DOCUMENT, handle_media))
         app.add_error_handler(error_handler)
 
         print("\n" + "=" * 70)
@@ -2073,20 +2061,29 @@ async def main():
         print("\n🛑 Для остановки нажмите Ctrl+C")
         print("=" * 70 + "\n")
 
-        # ✅ РУЧНОЙ ЗАПУСК БЕЗ run_polling() — КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ ДЛЯ PYTHON 3.13
+        # ✅ РУЧНОЙ ЗАПУСК БЕЗ run_polling() — КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ
         await app.initialize()
         await app.start()
+
+        # ЗАПУСК POLLING БЕЗ ПАРАМЕТРА close_loop (его нет в старых версиях!)
+        # Используем только поддерживаемые параметры
         await app.updater.start_polling(
             allowed_updates=Update.ALL_TYPES,
             drop_pending_updates=True,
-            close_loop=False  # Запрещаем закрывать цикл
+            # close_loop=False — УДАЛЕНО, так как не поддерживается!
         )
 
-        # Бесконечное ожидание с возможностью прерывания
         print("🔄 Бот работает в режиме ожидания сообщений...")
-        while True:
-            await asyncio.sleep(3600)  # Спим часами, но остаёмся отзывчивыми
+        print("   (Нажмите Ctrl+C для остановки)\n")
 
+        # Бесконечное ожидание с возможностью прерывания
+        # Используем короткие интервалы для быстрого реагирования на Ctrl+C
+        while True:
+            await asyncio.sleep(1)  # Короткий сон для отзывчивости
+
+    except KeyboardInterrupt:
+        print("\n👋 Получен сигнал остановки (Ctrl+C)...")
+        raise
     except ValueError as e:
         print(f"\n❌ Ошибка конфигурации: {e}")
         print("\n💡 Создайте файл .env в корне проекта:")
@@ -2099,23 +2096,37 @@ async def main():
         traceback.print_exc()
         raise
     finally:
-        # Корректное завершение
+        # ✅ КОРРЕКТНОЕ ЗАВЕРШЕНИЕ БЕЗ ПОПЫТОК ЗАКРЫТЬ ЦИКЛ
         print("\n🔄 Завершение работы бота...")
         try:
+            # Остановка polling
             if hasattr(app, 'updater') and app.updater and app.updater.running:
                 await app.updater.stop()
                 print("✅ Polling остановлен")
+
+            # Остановка приложения
             if hasattr(app, 'running') and app.running:
                 await app.stop()
                 print("✅ Приложение остановлено")
+
+            # Освобождение ресурсов
             await app.shutdown()
             print("✅ Ресурсы освобождены")
+
+            # Статистика при завершении
+            if session_manager:
+                stats = session_manager.get_stats()
+                print(f"\n📊 Финальная статистика:")
+                print(f"   • Всего пользователей: {stats['total_users']}")
+                print(f"   • Всего сообщений: {stats['total_messages']}")
+                print(f"   • Активных сессий: {stats['active_users']}")
+
         except Exception as e:
-            print(f"⚠️ Ошибка при завершении: {e}")
+            print(f"⚠️  Ошибка при завершении: {e}")
 
 
 def run():
-    """Точка входа для запуска бота — ИСПРАВЛЕНА"""
+    """Точка входа для запуска бота — СОВМЕСТИМО С PYTHON 3.13"""
     print("AGI24 Cognitive Bot - Version 3.0")
     print("Copyright (c) 2024 AGI24 Project")
     print("\n" + "=" * 70)
@@ -2147,7 +2158,7 @@ def run():
     else:
         print("✅ Библиотеки загружены успешно")
 
-    # ✅ ИСПРАВЛЕНИЕ: Используем UserSessionManager вместо несуществующего SessionManager
+    # ✅ ИСПРАВЛЕНИЕ: Используем правильное имя класса UserSessionManager
     global session_manager
     try:
         session_manager = UserSessionManager()  # Было: SessionManager()
@@ -2163,19 +2174,19 @@ def run():
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+        # ✅ nest_asyncio для совместимости с уже запущенным циклом (в PyCharm)
+        try:
+            import nest_asyncio
+            nest_asyncio.apply()
+            print("✅ nest_asyncio применён для совместимости с Python 3.13")
+        except ImportError:
+            print("⚠️  nest_asyncio не установлен. Установите: pip install nest_asyncio")
+
         # ✅ asyncio.run() создаёт НОВЫЙ чистый цикл событий
         asyncio.run(main())
 
     except KeyboardInterrupt:
         print("\n👋 Бот остановлен пользователем (Ctrl+C)")
-        try:
-            bot_stats = session_manager.get_stats()
-            print(f"📊 Статистика завершения работы:")
-            print(f"• Всего пользователей: {bot_stats['total_users']}")
-            print(f"• Всего сообщений: {bot_stats['total_messages']}")
-            print(f"• Активных сессий: {bot_stats['active_users']}")
-        except Exception as e:
-            print(f"⚠️  Ошибка получения статистики: {e}")
         print("\n✅ Бот завершил работу корректно")
         sys.exit(0)
     except Exception as e:
