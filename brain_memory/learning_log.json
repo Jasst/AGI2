@@ -1,0 +1,86 @@
+[
+  {
+    "timestamp": "2026-02-10T23:26:03.939920",
+    "event": "core_created",
+    "core_name": "bitcoin_price_core",
+    "trigger_query": "курс биткоина*? можешь создать ядро с апи чтобы получать актуальные данные ?",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-10T23:36:13.784611",
+    "event": "core_created",
+    "core_name": "web_search_core",
+    "trigger_query": "Создай ядро кратковременой и долговременой памяти ,чтобы ты мог ею оперировать , а всю память твою дублируй в json файле с помошью ядра которое ты создашь",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-10T23:39:35.936267",
+    "event": "core_created",
+    "core_name": "web_search_core",
+    "trigger_query": "создай ядро памяти ,которое тебе будет помогать вспоминать",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-10T23:41:42.697551",
+    "event": "core_created",
+    "core_name": "user_knowledge_core",
+    "trigger_query": ". Создать систему хранения данных (например, JSON Сохранять ключевые данные (имя, дата рождения, интересы и т.д.).\n3. Использовать их при каждом новом разговоре.",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-10T23:48:48.164648",
+    "event": "core_created",
+    "core_name": "user_state_core",
+    "trigger_query": "можешь создать ядро которое будет управлять этим процесом между сесиями ?",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-10T23:58:00.985314",
+    "event": "core_created",
+    "core_name": "user_numbers_core",
+    "trigger_query": "я просил запомнить числа",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-11T00:02:04.899895",
+    "event": "core_created",
+    "core_name": "user_memory_core",
+    "trigger_query": "создай ядро ,чтобы извлекать эту память своего рода долговременой памяти ,чтобы после перезагрузки ты мог их загрузить",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-11T00:13:31.355261",
+    "event": "core_created",
+    "core_name": "user_memory_core",
+    "trigger_query": "создай ядро сохранения json памяти",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-11T00:22:48.136325",
+    "event": "core_created",
+    "core_name": "numbers_memory_core",
+    "trigger_query": "ты можешь сохранить число 56",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-11T00:27:04.935200",
+    "event": "core_created",
+    "core_name": "file_manager_core",
+    "trigger_query": "а можешь создать ядро которое будет так делать? ядро которое сможет сохранять фаил?",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-11T00:36:17.435951",
+    "event": "core_created",
+    "core_name": "code_generation_core",
+    "trigger_query": "сгенерируй  код",
+    "user_id": "1198981287"
+  },
+  {
+    "timestamp": "2026-02-11T00:42:53.454302",
+    "event": "core_created",
+    "core_name": "file_storage_core",
+    "trigger_query": "запиши фаил название 555 ,текст 666",
+    "user_id": "1198981287"
+  }
+]
