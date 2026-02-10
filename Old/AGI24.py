@@ -47,7 +47,7 @@ class Config:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "nvidia/nemotron-3-nano-30b-a3b:free"
     TIMEOUT = 300
-    MAX_TOKENS = 8000
+    MAX_TOKENS = 800
 
     # Когнитивные параметры
     REFLECTION_INTERVAL = 3  # Чаще рефлексировать
