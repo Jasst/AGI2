@@ -1,17 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🤖 КОГНИТИВНЫЙ ИИ-АССИСТЕНТ v6.3 - ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ
-✅ ИСПРАВЛЕНО: бот теперь использует результаты поиска и других ядер
-✅ Безопасный парсинг вместо опасного eval()
-✅ Асинхронные запросы через httpx (без блокировки event loop)
-✅ Защита от инъекций и path traversal
-✅ Автоматическая передача данных от ВСЕХ ядер в контекст LLM
-✅ Структурированное логирование вместо print()
-✅ Отправка длинных сообщений частями
-✅ Блокировки для защиты от параллельных запросов
-✅ Ограничения на размер файлов и контента
-✅ Умное кэширование с автоматической очисткой
+🤖 САМООБУЧАЮЩИЙСЯ МИНИ-МОЗГ БОТ v6.2 - ИСПРАВЛЕНА ОШИБКА С АТРИБУТОМ bot
+✅ Устранена ошибка: AttributeError: 'AdvancedTelegramBot' object has no attribute 'bot'
+✅ Правильное использование context.bot из обработчиков
+✅ Все предыдущие улучшения безопасности и производительности сохранены
 """
 import os
 import json
@@ -21,45 +14,64 @@ import asyncio
 import traceback
 import hashlib
 import time
+import shutil
 import uuid
 import math
+import random
+import base64
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any, Optional, Tuple, Set, Callable
 from abc import ABC, abstractmethod
 from enum import Enum
 from dataclasses import dataclass, field
 from collections import defaultdict, deque, OrderedDict
+import pickle
+import csv
+import yaml
+import pathlib
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 import logging
 from logging.handlers import RotatingFileHandler
+
+
 # ==================== НАСТРОЙКА ЛОГИРОВАНИЯ ====================
 def setup_logging():
+    """Настройка структурированного логирования с ротацией"""
     log_formatter = logging.Formatter(
         '%(asctime)s | %(levelname)-8s | %(name)-15s | %(funcName)-20s | %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
     file_handler = RotatingFileHandler(
-        'bot.log', maxBytes=10 * 1024 * 1024, backupCount=5, encoding='utf-8'
+        'bot.log',
+        maxBytes=10 * 1024 * 1024,
+        backupCount=5,
+        encoding='utf-8'
     )
     file_handler.setFormatter(log_formatter)
     file_handler.setLevel(logging.INFO)
+
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(log_formatter)
     console_handler.setLevel(logging.INFO)
+
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
+
     logging.getLogger('httpx').setLevel(logging.WARNING)
     logging.getLogger('telegram').setLevel(logging.INFO)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
+
     return root_logger
+
 
 logger = setup_logging()
 logger.info("=" * 80)
-logger.info("🚀 ЗАПУСК КОГНИТИВНОГО ИИ-АССИСТЕНТА v6.3 (полностью рабочая версия)")
+logger.info("🚀 ЗАПУСК КОГНИТИВНОГО ИИ-АССИСТЕНТА v6.2 (исправлена ошибка с атрибутом bot)")
 logger.info("=" * 80)
 
 # ==================== ИМПОРТЫ С ОБРАБОТКОЙ ОШИБОК ====================
@@ -86,20 +98,31 @@ if not TELEGRAM_TOKEN:
 
 LM_STUDIO_API_URL = os.getenv('LM_STUDIO_API_URL', 'http://localhost:1234/v1/chat/completions')
 LM_STUDIO_API_KEY = os.getenv('LM_STUDIO_API_KEY', 'lm-studio')
+
 CORES_DIR = "dynamic_cores"
 MEMORY_DIR = "brain_memory"
 USER_FILES_DIR = "user_files"
-
-for directory in [CORES_DIR, MEMORY_DIR, USER_FILES_DIR]:
+KNOWLEDGE_BASE_DIR = "knowledge_base"
+COGNITIVE_MODELS_DIR = "cognitive_models"
+for directory in [CORES_DIR, MEMORY_DIR, USER_FILES_DIR, KNOWLEDGE_BASE_DIR, COGNITIVE_MODELS_DIR]:
     os.makedirs(directory, exist_ok=True)
+
+LEARNING_LOG = os.path.join(MEMORY_DIR, "learning_log.json")
+CORE_PERFORMANCE_LOG = os.path.join(MEMORY_DIR, "core_performance.json")
+REJECTED_CORES_LOG = os.path.join(MEMORY_DIR, "rejected_cores.json")
+COGNITIVE_STATE = os.path.join(MEMORY_DIR, "cognitive_state.json")
+LONG_TERM_MEMORY = os.path.join(MEMORY_DIR, "long_term_memory.jsonl")
+SHORT_TERM_MEMORY = os.path.join(MEMORY_DIR, "short_term_memory.json")
 
 with open(os.path.join(CORES_DIR, "__init__.py"), "w", encoding='utf-8') as f:
     f.write("# Auto-generated for imports\n")
+
 
 # ==================== ИСКЛЮЧЕНИЯ БЕЗОПАСНОСТИ ====================
 class SecurityError(Exception):
     """Исключение для нарушений безопасности"""
     pass
+
 
 # ==================== КОГНИТИВНЫЕ КЛАССЫ ====================
 class CognitiveState(Enum):
@@ -111,6 +134,7 @@ class CognitiveState(Enum):
     DECIDING = "deciding"
     EXECUTING = "executing"
     IMAGINING = "imagining"
+
 
 @dataclass
 class Thought:
@@ -151,6 +175,7 @@ class Thought:
             importance=data.get('importance', 0.5)
         )
 
+
 @dataclass
 class MemoryRecord:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
@@ -164,7 +189,7 @@ class MemoryRecord:
     memory_type: str = "short_term"
     consolidation_score: float = 0.0
     emotional_valence: float = 0.0
-    sensory_data: Dict[str, Any] = field(default_factory=dict)  # ИСПРАВЛЕНО: было "sensory_"
+    sensory_data: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -183,7 +208,7 @@ class MemoryRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MemoryRecord':  # ИСПРАВЛЕНО: сигнатура метода
+    def from_dict(cls, data: Dict[str, Any]) -> 'MemoryRecord':
         return cls(
             id=data.get('id', str(uuid.uuid4())),
             timestamp=datetime.fromisoformat(data['timestamp']),
@@ -199,6 +224,7 @@ class MemoryRecord:
             sensory_data=data.get('sensory_data', {})
         )
 
+
 # ==================== АДАПТИВНАЯ СИСТЕМА ПАМЯТИ ====================
 class AdaptiveMemorySystem:
     def __init__(self, user_id: str):
@@ -206,14 +232,17 @@ class AdaptiveMemorySystem:
         self.short_term_capacity = 20
         self.consolidation_threshold = 0.7
         self.deduplication_threshold = 0.85
+
         self.short_term_memory: deque = deque(maxlen=self.short_term_capacity)
         self.long_term_memory: List[MemoryRecord] = []
         self.memory_index: Dict[str, MemoryRecord] = {}
         self.chronological_index: List[str] = []
         self.association_graph: Dict[str, Set[str]] = defaultdict(set)
+
         self.total_consolidations = 0
         self.total_deduplications = 0
         self.total_imaginations = 0
+
         self._load_memory()
         logger.info(f"💾 Система памяти инициализирована для пользователя {user_id} | "
                     f"Кратковременная: {len(self.short_term_memory)} | "
@@ -268,7 +297,7 @@ class AdaptiveMemorySystem:
 
     def add_memory(self, content: str, context: Dict[str, Any] = None,
                    importance: float = 0.5, emotional_valence: float = 0.0,
-                   sensory_data: Dict[str, Any] = None) -> MemoryRecord:  # ИСПРАВЛЕНО: sensory_data
+                   sensory_data: Dict[str, Any] = None) -> MemoryRecord:
         duplicate = self._find_duplicate(content)
         if duplicate:
             duplicate.access_count += 1
@@ -287,13 +316,16 @@ class AdaptiveMemorySystem:
             importance=min(max(importance, 0.0), 1.0),
             memory_type='short_term',
             emotional_valence=min(max(emotional_valence, -1.0), 1.0),
-            sensory_data=sensory_data or {}  # ИСПРАВЛЕНО: sensory_data
+            sensory_data=sensory_data or {}
         )
+
         record.consolidation_score = self._calculate_consolidation_score(record)
         self.short_term_memory.append(record)
         self.memory_index[record.id] = record
+
         if record.consolidation_score >= self.consolidation_threshold:
             self._consolidate_to_long_term(record)
+
         self._create_associations(record)
         return record
 
@@ -307,10 +339,12 @@ class AdaptiveMemorySystem:
     def _calculate_similarity(self, text1: str, text2: str) -> float:
         if not text1 or not text2:
             return 0.0
+
         words1 = set(text1.lower().split())
         words2 = set(text2.lower().split())
         if not words1 or not words2:
             return 0.0
+
         intersection = words1 & words2
         union = words1 | words2
         return len(intersection) / len(union) if union else 0.0
@@ -357,6 +391,7 @@ class AdaptiveMemorySystem:
             scored_memories.append((score, memory))
 
         scored_memories.sort(key=lambda x: x[0], reverse=True)
+
         results = []
         for score, memory in scored_memories[:limit]:
             memory.access_count += 1
@@ -369,8 +404,8 @@ class AdaptiveMemorySystem:
         return results
 
     def get_chronological_sequence(self, start_time: datetime = None,
-                                    end_time: datetime = None,
-                                    limit: int = 20) -> List[MemoryRecord]:
+                                   end_time: datetime = None,
+                                   limit: int = 20) -> List[MemoryRecord]:
         filtered = []
         for record_id in self.chronological_index:
             if record_id in self.memory_index:
@@ -386,16 +421,21 @@ class AdaptiveMemorySystem:
         memories = [self.memory_index[mid] for mid in memory_ids if mid in self.memory_index]
         if not memories:
             return {}
+
         memories.sort(key=lambda x: x.timestamp)
         concatenated_content = "\n".join([m.content for m in memories])
+
         merged_context = {}
         for memory in memories:
             merged_context.update(memory.context)
+
         all_associations = set()
         for memory in memories:
             all_associations.update(memory.associations)
+
         avg_importance = sum(m.importance for m in memories) / len(memories)
         avg_emotional = sum(m.emotional_valence for m in memories) / len(memories)
+
         image = {
             'content': concatenated_content,
             'context': merged_context,
@@ -466,18 +506,44 @@ class AdaptiveMemorySystem:
                 self.long_term_memory) if self.long_term_memory else 0
         }
 
+    def cleanup_old_memories(self, days_threshold: int = 30):
+        threshold_date = datetime.now() - timedelta(days=days_threshold)
+        cleaned_memories = []
+        removed_count = 0
+
+        for memory in self.long_term_memory:
+            should_keep = (
+                    memory.timestamp > threshold_date or
+                    memory.importance > 0.7 or
+                    memory.access_count > 5
+            )
+            if should_keep:
+                cleaned_memories.append(memory)
+            else:
+                removed_count += 1
+                if memory.id in self.memory_index:
+                    del self.memory_index[memory.id]
+                if memory.id in self.chronological_index:
+                    self.chronological_index.remove(memory.id)
+
+        self.long_term_memory = cleaned_memories
+        if removed_count > 0:
+            logger.info(f"🧹 Очищено {removed_count} старых записей из долговременной памяти")
+            self.save_memory()
+
+
 # ==================== ТИПЫ ОТВЕТОВ ЯДЕР ====================
 class CoreResponse:
     def __init__(
-        self,
-        success: bool,
-        data: Optional[Dict[str, Any]] = None,
-        raw_result: Optional[str] = None,
-        confidence: float = 1.0,
-        source: str = "unknown",
-        direct_answer: bool = False,
-        needs_reflection: bool = False,
-        reflection_context: Optional[Dict[str, Any]] = None
+            self,
+            success: bool,
+            data: Optional[Dict[str, Any]] = None,
+            raw_result: Optional[str] = None,
+            confidence: float = 1.0,
+            source: str = "unknown",
+            direct_answer: bool = False,
+            needs_reflection: bool = False,
+            reflection_context: Optional[Dict[str, Any]] = None
     ):
         self.success = success
         self.data = data or {}
@@ -493,13 +559,14 @@ class CoreResponse:
             return f"❌ Ошибка получения данных из источника '{self.source}': {self.data.get('error', 'Неизвестная ошибка')}"
         if self.raw_result:
             return f"📊 ДАННЫЕ ОТ '{self.source.upper()}':\n{self.raw_result}"
-        if self.data:  # ИСПРАВЛЕНО: добавлено условие if self.data
+        if self.data:
             formatted_data = json.dumps(self.data, ensure_ascii=False, indent=2)
             return f"📊 СТРУКТУРИРОВАННЫЕ ДАННЫЕ ОТ '{self.source.upper()}':\n{formatted_data}"
         return f"ℹ️ Источник '{self.source}' обработал запрос, но не вернул данных"
 
     def is_final_answer(self) -> bool:
         return self.direct_answer and self.success and self.raw_result and len(self.raw_result.strip()) > 10
+
 
 # ==================== БАЗОВЫЙ КЛАСС ЯДРА ====================
 class KnowledgeCore(ABC):
@@ -510,6 +577,7 @@ class KnowledgeCore(ABC):
     direct_answer_mode: bool = False
     cognitive_load: int = 1
     version: str = "1.0.0"
+
     total_executions: int = 0
     successful_executions: int = 0
     average_confidence: float = 0.0
@@ -531,7 +599,7 @@ class KnowledgeCore(ABC):
         if success:
             self.successful_executions += 1
         self.average_confidence = (self.average_confidence * (
-            self.total_executions - 1) + confidence) / self.total_executions
+                self.total_executions - 1) + confidence) / self.total_executions
         self.last_execution = datetime.now()
 
     def get_efficiency_score(self) -> float:
@@ -539,6 +607,7 @@ class KnowledgeCore(ABC):
             return 0.0
         success_rate = self.successful_executions / self.total_executions
         return (success_rate * 0.6 + self.average_confidence * 0.4) * (10 / self.cognitive_load)
+
 
 # ==================== ВСТРОЕННЫЕ ЯДРА ====================
 class DateTimeCore(KnowledgeCore):
@@ -588,6 +657,7 @@ class DateTimeCore(KnowledgeCore):
             self.update_metrics(False, 0.0)
             return CoreResponse(success=False, data={'error': str(e)}, source=self.name)
 
+
 class CalculatorCore(KnowledgeCore):
     name = "calculator_core"
     description = "Математические вычисления"
@@ -608,6 +678,7 @@ class CalculatorCore(KnowledgeCore):
 
     def _safe_eval(self, expr: str) -> Any:
         import operator
+
         operators = {
             ast.Add: operator.add,
             ast.Sub: operator.sub,
@@ -619,14 +690,16 @@ class CalculatorCore(KnowledgeCore):
             ast.USub: operator.neg,
             ast.UAdd: operator.pos,
         }
+
         allowed_functions = {
             'abs': abs,
             'round': round,
-            'min': min,
+            'min': min,  # ИСПРАВЛЕНО: было min: max
             'max': max,
             'pow': pow,
             'sqrt': math.sqrt,
         }
+
         allowed_constants = {
             'pi': math.pi,
             'e': math.e,
@@ -637,6 +710,7 @@ class CalculatorCore(KnowledgeCore):
                 if isinstance(node.value, (int, float)):
                     return node.value
                 raise ValueError(f"Недопустимый тип константы: {type(node.value).__name__}")
+
             elif isinstance(node, ast.BinOp):
                 left = eval_node(node.left)
                 right = eval_node(node.right)
@@ -644,12 +718,14 @@ class CalculatorCore(KnowledgeCore):
                 if op_type not in operators:
                     raise ValueError(f"Недопустимая операция: {op_type.__name__}")
                 return operators[op_type](left, right)
+
             elif isinstance(node, ast.UnaryOp):
                 operand = eval_node(node.operand)
                 op_type = type(node.op)
                 if op_type not in operators:
                     raise ValueError(f"Недопустимая унарная операция: {op_type.__name__}")
                 return operators[op_type](operand)
+
             elif isinstance(node, ast.Call):
                 if not isinstance(node.func, ast.Name):
                     raise ValueError("Поддерживаются только простые вызовы функций")
@@ -658,28 +734,35 @@ class CalculatorCore(KnowledgeCore):
                     raise ValueError(f"Недопустимая функция: {func_name}")
                 args = [eval_node(arg) for arg in node.args]
                 return allowed_functions[func_name](*args)
+
             elif isinstance(node, ast.Name):
                 if node.id in allowed_constants:
                     return allowed_constants[node.id]
                 raise ValueError(f"Неизвестная переменная: {node.id}")
+
             elif isinstance(node, ast.Expr):
                 return eval_node(node.value)
+
             else:
                 raise ValueError(f"Недопустимый элемент выражения: {type(node).__name__}")
 
         try:
             if len(expr) > 200:
                 raise ValueError("Выражение слишком длинное")
+
             dangerous_patterns = ['import', 'exec', 'eval', '__', 'open', 'os.', 'sys.', 'subprocess']
             if any(pattern in expr.lower() for pattern in dangerous_patterns):
                 raise ValueError("Обнаружены запрещенные паттерны в выражении")
+
             tree = ast.parse(expr, mode='eval')
             result = eval_node(tree.body)
+
             if isinstance(result, float):
                 if math.isinf(result):
                     raise ValueError("Результат бесконечен")
                 if math.isnan(result):
                     raise ValueError("Результат не является числом")
+
             return result
         except Exception as e:
             raise ValueError(f"Ошибка вычисления: {str(e)}")
@@ -689,10 +772,13 @@ class CalculatorCore(KnowledgeCore):
             expr_match = re.search(r'([\d\.\+\-\*\/\^\(\)\s\w]+)', query)
             if not expr_match:
                 raise ValueError("Не найдено математическое выражение")
+
             expr_str = expr_match.group(1).strip()
             expr_str = expr_str.replace('x', '*').replace('×', '*').replace('÷', '/').replace('^', '**')
+
             if not re.match(r'^[\d\s\.\+\-\*\/\(\)\w\,]+$', expr_str):
                 raise ValueError("Недопустимые символы в выражении")
+
             result = self._safe_eval(expr_str)
             response_text = f"🧮 **Результат:** `{expr_str} = {result}`"
             self.update_metrics(True, 0.95)
@@ -714,6 +800,7 @@ class CalculatorCore(KnowledgeCore):
                 direct_answer=True
             )
 
+
 class WebSearchCore(KnowledgeCore):
     name = "web_search_core"
     description = "Поиск актуальной информации в интернете"
@@ -733,11 +820,14 @@ class WebSearchCore(KnowledgeCore):
     def _cleanup_cache(self):
         current_time = time.time()
         to_remove = []
+
         for key, value in list(self.cache.items()):
             if current_time - value['timestamp'] > self.cache_ttl:
                 to_remove.append(key)
+
         for key in to_remove:
             del self.cache[key]
+
         while len(self.cache) > self.cache_max_size:
             self.cache.popitem(last=False)
 
@@ -748,7 +838,7 @@ class WebSearchCore(KnowledgeCore):
         exclude = ['какой сегодня день', 'который час', 'сколько будет']
         if any(kw in q for kw in exclude):
             return False
-        keywords = ['найди', 'новост', 'информаци', 'что такое', 'кто такой', 'курс', 'цена']
+        keywords = ['найди', 'новост', 'информаци', 'что такое', 'кто такой']
         return any(kw in q for kw in keywords)
 
     def execute(self, query: str, context: Optional[Dict[str, Any]] = None) -> CoreResponse:
@@ -761,7 +851,9 @@ class WebSearchCore(KnowledgeCore):
 
         try:
             self._cleanup_cache()
+
             cache_key = hashlib.md5(query.strip().lower().encode()).hexdigest()
+
             if cache_key in self.cache:
                 cached = self.cache[cache_key]
                 self.total_cache_hits += 1
@@ -797,7 +889,7 @@ class WebSearchCore(KnowledgeCore):
                 if href:
                     results_text += f"   🔗 [{href[:50]}]({href})\n"
 
-            cache_stats = f"\n📦 Кэш: {len(self.cache)}/{self.cache_max_size} записей"
+            cache_stats = f"\n📦 Кэш: {len(self.cache)}/{self.cache_max_size} записей | Хитов: {self.total_cache_hits}"
             results_text += cache_stats
 
             self.update_metrics(True, 0.85)
@@ -813,6 +905,7 @@ class WebSearchCore(KnowledgeCore):
                 source=self.name,
                 needs_reflection=True
             )
+
         except Exception as e:
             self.update_metrics(False, 0.0)
             error_msg = f"Ошибка поиска: {str(e)[:150]}"
@@ -822,6 +915,7 @@ class WebSearchCore(KnowledgeCore):
                 data={'error': error_msg},
                 source=self.name
             )
+
 
 class FileStorageCore(KnowledgeCore):
     name = "file_storage_core"
@@ -840,11 +934,14 @@ class FileStorageCore(KnowledgeCore):
     def _sanitize_filename(self, filename: str) -> str:
         if not filename:
             return f"document_{int(time.time())}.txt"
+
         filename = os.path.basename(filename)
         filename = filename.strip().strip('\'"')
+
         dangerous_chars = '<>:"/\\|?*'
         for char in dangerous_chars:
             filename = filename.replace(char, '_')
+
         reserved_names = {
             'CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3',
             'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
@@ -854,13 +951,16 @@ class FileStorageCore(KnowledgeCore):
         name_without_ext = os.path.splitext(filename)[0].upper()
         if name_without_ext in reserved_names:
             filename = f"safe_{filename}"
+
         if len(filename) > 255:
             name, ext = os.path.splitext(filename)
             filename = name[:255 - len(ext)] + ext
         elif len(filename) < 1:
             filename = f"unnamed_{int(time.time())}.txt"
+
         if '.' not in filename or filename.startswith('.'):
             filename += '.txt'
+
         return filename
 
     def _validate_file_size(self, content: str) -> Tuple[bool, str]:
@@ -874,8 +974,10 @@ class FileStorageCore(KnowledgeCore):
         filepath = os.path.join(self.storage_dir, sanitized)
         filepath = os.path.abspath(filepath)
         storage_abs = os.path.abspath(self.storage_dir)
+
         if not filepath.startswith(storage_abs + os.sep):
             raise SecurityError(f"Попытка выхода за пределы хранилища: {filename}")
+
         return filepath
 
     def can_handle(self, query: str) -> bool:
@@ -892,6 +994,7 @@ class FileStorageCore(KnowledgeCore):
     def execute(self, query: str, context: Optional[Dict[str, Any]] = None) -> CoreResponse:
         try:
             q = query.lower()
+
             if any(cmd in q for cmd in ['прочитай', 'открой']):
                 match = re.search(r'файл\s+["\']?([^"\'\s]+)["\']?', query, re.IGNORECASE)
                 if not match:
@@ -902,8 +1005,10 @@ class FileStorageCore(KnowledgeCore):
                         source=self.name,
                         direct_answer=True
                     )
+
                 filename = self._sanitize_filename(match.group(1))
                 filepath = self._get_safe_filepath(filename)
+
                 if not os.path.exists(filepath):
                     return CoreResponse(
                         success=False,
@@ -912,6 +1017,7 @@ class FileStorageCore(KnowledgeCore):
                         source=self.name,
                         direct_answer=True
                     )
+
                 file_size = os.path.getsize(filepath)
                 if file_size > self.max_file_size:
                     return CoreResponse(
@@ -921,8 +1027,10 @@ class FileStorageCore(KnowledgeCore):
                         source=self.name,
                         direct_answer=True
                     )
+
                 with open(filepath, 'r', encoding='utf-8') as f:
                     content = f.read(5000)
+
                 preview = content[:500] + ('...' if len(content) > 500 else '')
                 result = f"📄 **Файл `{filename}`:**\n```text\n{preview}\n```"
                 self.update_metrics(True, 1.0)
@@ -934,6 +1042,7 @@ class FileStorageCore(KnowledgeCore):
                     source=self.name,
                     direct_answer=True
                 )
+
             elif 'сохрани' in q:
                 match = re.search(r'файл\s+["\']?([^"\':]+)["\']?\s*[:：]\s*(.+)', query, re.IGNORECASE | re.DOTALL)
                 if not match:
@@ -944,8 +1053,10 @@ class FileStorageCore(KnowledgeCore):
                         source=self.name,
                         direct_answer=True
                     )
+
                 filename = self._sanitize_filename(match.group(1))
                 content = match.group(2).strip()
+
                 is_valid, error_msg = self._validate_file_size(content)
                 if not is_valid:
                     return CoreResponse(
@@ -955,9 +1066,12 @@ class FileStorageCore(KnowledgeCore):
                         source=self.name,
                         direct_answer=True
                     )
+
                 filepath = self._get_safe_filepath(filename)
+
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(content)
+
                 result = f"✅ **Файл сохранен:** `{filename}`\n📊 Размер: {len(content)} байт"
                 self.update_metrics(True, 1.0)
                 return CoreResponse(
@@ -968,12 +1082,14 @@ class FileStorageCore(KnowledgeCore):
                     source=self.name,
                     direct_answer=True
                 )
+
             elif 'список' in q:
                 files = []
                 for f in os.listdir(self.storage_dir):
                     fp = os.path.join(self.storage_dir, f)
                     if os.path.isfile(fp) and os.path.abspath(fp).startswith(os.path.abspath(self.storage_dir)):
                         files.append(f)
+
                 if not files:
                     result = "📁 **Файловое хранилище пусто**"
                 else:
@@ -982,6 +1098,7 @@ class FileStorageCore(KnowledgeCore):
                         size = os.path.getsize(os.path.join(self.storage_dir, f))
                         size_str = f"{size / 1024:.1f} КБ" if size > 1024 else f"{size} байт"
                         result += f"{i}. `{f}` ({size_str})\n"
+
                 self.update_metrics(True, 1.0)
                 return CoreResponse(
                     success=True,
@@ -991,11 +1108,13 @@ class FileStorageCore(KnowledgeCore):
                     source=self.name,
                     direct_answer=True
                 )
+
             return CoreResponse(
                 success=False,
                 data={'error': 'Неизвестная команда'},
                 source=self.name
             )
+
         except SecurityError as e:
             logger.warning(f"⚠️ Попытка нарушения безопасности: {e}")
             return CoreResponse(
@@ -1016,6 +1135,7 @@ class FileStorageCore(KnowledgeCore):
                 direct_answer=True
             )
 
+
 # ==================== КОГНИТИВНАЯ СИСТЕМА ====================
 class CognitiveSystem:
     def __init__(self, user_id: str):
@@ -1027,10 +1147,9 @@ class CognitiveSystem:
         self._load_state()
 
     def _load_state(self):
-        cognitive_state_file = os.path.join(MEMORY_DIR, f"cognitive_state_{self.user_id}.json")
-        if os.path.exists(cognitive_state_file):
+        if os.path.exists(COGNITIVE_STATE):
             try:
-                with open(cognitive_state_file, 'r', encoding='utf-8') as f:
+                with open(COGNITIVE_STATE, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     for thought_data in data.get('thoughts', []):
                         thought = Thought.from_dict(thought_data)
@@ -1043,14 +1162,13 @@ class CognitiveSystem:
 
     def save_state(self):
         try:
-            cognitive_state_file = os.path.join(MEMORY_DIR, f"cognitive_state_{self.user_id}.json")
             data = {
                 'thoughts': [t.to_dict() for t in self.thoughts[-100:]],
                 'current_state': self.current_state.value,
                 'learning_rate': self.learning_rate,
                 'last_saved': datetime.now().isoformat()
             }
-            with open(cognitive_state_file, 'w', encoding='utf-8') as f:
+            with open(COGNITIVE_STATE, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             self.memory_system.save_memory()
         except Exception as e:
@@ -1102,7 +1220,7 @@ class CognitiveSystem:
 
     def _detect_intent(self, query: str) -> str:
         q = query.lower()
-        if any(word in q for word in ['что', 'кто', 'где', 'когда', 'курс', 'цена']):
+        if any(word in q for word in ['что', 'кто', 'где', 'когда']):
             return 'question'
         elif any(word in q for word in ['сделай', 'создай', 'сохрани']):
             return 'command'
@@ -1139,6 +1257,7 @@ class CognitiveSystem:
             solution_steps.append(f"Шаг {i}: {mem.content[:100]}")
         return solution_steps
 
+
 # ==================== МЕНЕДЖЕР ЯДЕР ====================
 class AdvancedToolsManager:
     def __init__(self):
@@ -1158,16 +1277,17 @@ class AdvancedToolsManager:
         for core in builtin_cores:
             self.cores[core.name] = core
 
-    def find_all_relevant_cores(self, query: str) -> List[Tuple[KnowledgeCore, float]]:
-        """Находит ВСЕ релевантные ядра для запроса (не только одно лучшее)"""
+    def find_best_core(self, query: str) -> Optional[Tuple[KnowledgeCore, float]]:
         candidates = []
         for core in self.cores.values():
             if core.can_handle(query):
                 confidence = core.get_confidence(query)
-                if confidence >= 0.3:
+                if confidence >= 0.4:
                     candidates.append((core, confidence))
+        if not candidates:
+            return None
         candidates.sort(key=lambda x: (x[1], -x[0].priority), reverse=True)
-        return candidates
+        return candidates[0]
 
     def execute_core(self, core: KnowledgeCore, query: str, context: Dict = None) -> CoreResponse:
         try:
@@ -1182,9 +1302,12 @@ class AdvancedToolsManager:
             logger.error(f"Ошибка выполнения ядра {core.name}: {e}", exc_info=True)
             return CoreResponse(success=False, data={'error': str(e)}, source=core.name)
 
-# ==================== ПРОДВИНУТЫЙ МИНИ-МОЗГ (КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ) ====================
+
+# ==================== ПРОДВИНУТЫЙ МИНИ-МОЗГ ====================
+# ==================== ПРОДВИНУТЫЙ МИНИ-МОЗГ (ИСПРАВЛЕННАЯ ВЕРСИЯ) ====================
 class AdvancedMiniBrain:
-    """Продвинутая версия с ПРАВИЛЬНОЙ передачей данных от ядер в контекст LLM"""
+    """Продвинутая версия с правильной интеграцией данных от ядер в контекст LLM"""
+
     def __init__(self, user_id: str):
         self.user_id = user_id
         self.cognitive_system = CognitiveSystem(user_id)
@@ -1193,6 +1316,7 @@ class AdvancedMiniBrain:
         logger.info(f"🧠 AdvancedMiniBrain готов для пользователя {user_id}")
 
     async def process(self, query: str, llm_caller) -> Dict[str, Any]:
+        """Обработка запроса с правильной передачей данных от ядер в LLM"""
         logger.info(f"{'=' * 70}\n🧠 Запрос от {self.user_id}: {query[:80]}\n{'=' * 70}")
 
         # Анализ запроса
@@ -1202,47 +1326,52 @@ class AdvancedMiniBrain:
         # Получаем контекст из памяти
         memory_context = self.cognitive_system.get_memory_context(query)
 
-        # 🔑 КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Собираем данные от ВСЕХ релевантных ядер
+        # Собираем данные от ВСЕХ подходящих ядер (не только одного "лучшего")
         core_responses: List[CoreResponse] = []
         direct_response: Optional[CoreResponse] = None
 
-        # Находим все подходящие ядра
-        relevant_cores = self.tools_manager.find_all_relevant_cores(query)
-        logger.debug(f"🎯 Найдено релевантных ядер: {len(relevant_cores)}")
+        # 1. Сначала проверяем все ядра на возможность обработки
+        for core in self.tools_manager.cores.values():
+            if core.can_handle(query):
+                logger.debug(f"🎯 Ядро '{core.name}' может обработать запрос")
+                try:
+                    response = self.tools_manager.execute_core(core, query, {
+                        'user_id': self.user_id,
+                        'memory_context': memory_context,
+                        'query_analysis': query_analysis
+                    })
 
-        for core, confidence in relevant_cores:
-            logger.debug(f"   → Выполняем ядро '{core.name}' (уверенность: {confidence:.2f})")
-            try:
-                response = self.tools_manager.execute_core(core, query, {
-                    'user_id': self.user_id,
-                    'memory_context': memory_context,
-                    'query_analysis': query_analysis
-                })
-                core_responses.append(response)
+                    # Сохраняем ответ для дальнейшей обработки
+                    core_responses.append(response)
 
-                # Сохраняем данные в память
-                self.cognitive_system.memory_system.add_memory(
-                    content=f"Данные от {core.name}: {response.raw_result[:200] if response.raw_result else 'Нет данных'}",
-                    context={'source': core.name, 'query': query, 'type': 'core_data'},
-                    importance=0.6 + (response.confidence * 0.3) if response.success else 0.2
-                )
+                    # Если это прямой ответ с высокой уверенностью - запоминаем его
+                    if response.success and response.direct_answer and response.confidence >= 0.8:
+                        # Выбираем самый уверенный прямой ответ
+                        if direct_response is None or response.confidence > direct_response.confidence:
+                            direct_response = response
+                            logger.debug(
+                                f"✅ Найден прямой ответ от ядра '{core.name}' (уверенность: {response.confidence:.2f})")
 
-                # Если это прямой ответ с высокой уверенностью - запоминаем для немедленного ответа
-                if response.success and response.direct_answer and response.confidence >= 0.85:
-                    if direct_response is None or response.confidence > direct_response.confidence:
-                        direct_response = response
-                        logger.info(f"⚡ Выбран прямой ответ от ядра '{core.name}'")
-            except Exception as e:
-                logger.error(f"Ошибка выполнения ядра {core.name}: {e}", exc_info=True)
-                continue
+                except Exception as e:
+                    logger.error(f"Ошибка выполнения ядра {core.name}: {e}", exc_info=True)
+                    continue
 
-        # Если есть прямой ответ с высокой уверенностью - возвращаем его сразу
+        # 2. Если есть прямой ответ с высокой уверенностью - возвращаем его сразу
         if direct_response and direct_response.raw_result.strip():
+            # Сохраняем в память
+            self.cognitive_system.memory_system.add_memory(
+                content=f"Запрос: {query[:200]} | Прямой ответ: {direct_response.raw_result[:100]}",
+                context={'source': direct_response.source, 'success': True, 'type': 'direct_answer'},
+                importance=0.9
+            )
+
             self.conversation_history.append({
                 'role': 'assistant',
                 'content': direct_response.raw_result[:500],
                 'source': direct_response.source
             })
+
+            logger.info(f"⚡ Прямой ответ от ядра '{direct_response.source}'")
             return {
                 'type': 'direct_core_response',
                 'response': direct_response.raw_result,
@@ -1250,82 +1379,95 @@ class AdvancedMiniBrain:
                 'need_llm': False
             }
 
-        # 🔑 КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Формируем контекст для LLM с данными от ВСЕХ ядер
+        # 3. Формируем контекст для LLM с данными от ВСЕХ ядер
+        # Даже если нет прямого ответа, данные от ядер (особенно поиска) критически важны!
         core_data_context = ""
-        has_core_data = False
         if core_responses:
             # Сортируем по уверенности и приоритету
-            core_responses.sort(key=lambda r: (
-                r.confidence,
-                -self.tools_manager.cores[r.source].priority if r.source in self.tools_manager.cores else 0
-            ), reverse=True)
+            core_responses.sort(key=lambda r: (r.confidence, -self.tools_manager.cores[
+                r.source].priority if r.source in self.tools_manager.cores else 0), reverse=True)
 
             # Формируем контекст из данных ядер
             for i, resp in enumerate(core_responses, 1):
                 if resp.success and resp.raw_result.strip():
-                    has_core_data = True
-                    core_data_context += f"\n### 📊 ДАННЫЕ ОТ МОДУЛЯ [{resp.source.upper()}] (уверенность: {resp.confidence:.2f}):\n{resp.raw_result}\n"
-                    logger.debug(f"   ➕ Добавлены данные от ядра '{resp.source}' в контекст LLM")
+                    # Добавляем данные в контекст для LLM
+                    core_data_context += f"\n### ДАННЫЕ ОТ МОДУЛЯ [{resp.source.upper()}] (уверенность: {resp.confidence:.2f}):\n{resp.raw_result}\n"
+                    logger.debug(f"📊 Добавлены данные от ядра '{resp.source}' в контекст LLM")
 
-        # Если нет данных от ядер - добавляем подсказку для LLM
-        if not has_core_data:
-            core_data_context = "\n### 📊 ДАННЫЕ ОТ СПЕЦИАЛИЗИРОВАННЫХ МОДУЛЕЙ:\nНе найдено релевантных данных от специализированных модулей. Ответь на основе общих знаний.\n"
+                    # Сохраняем в память для будущих запросов
+                    self.cognitive_system.memory_system.add_memory(
+                        content=f"Данные от {resp.source}: {resp.raw_result[:200]}",
+                        context={'source': resp.source, 'query': query, 'type': 'core_data'},
+                        importance=0.6 + (resp.confidence * 0.3)
+                    )
+
+        # 4. Если нет данных от ядер - добавляем подсказку для LLM
+        if not core_data_context.strip():
+            core_data_context = "\n### ДАННЫЕ ОТ СПЕЦИАЛИЗИРОВАННЫХ МОДУЛЕЙ:\nНе найдено релевантных данных. Ответь на основе общих знаний.\n"
             logger.debug("⚠️ Нет данных от ядер, используем общие знания LLM")
 
-        # Строим полный контекст для LLM с ЧЕТКИМИ ИНСТРУКЦИЯМИ использовать данные ядер
+        # 5. Строим полный контекст для LLM
         llm_context = self._build_llm_context(
             query=query,
             analysis=query_analysis,
             memory_context=memory_context,
             core_data_context=core_data_context  # ← КРИТИЧЕСКИ ВАЖНО: передаем данные от ядер!
         )
-        logger.info(f"🧠 Передано в LLM: {len(llm_context)} символов контекста (включая данные от ядер)")
 
+        logger.info(f"🧠 Передано в LLM: {len(llm_context)} символов контекста (включая данные от ядер)")
         return {
             'type': 'llm_with_memory_and_cores',
             'context': llm_context,
-            'need_llm': True
+            'need_llm': True,
+            'core_responses': [r.to_dict() for r in core_responses if hasattr(r, 'to_dict')] if hasattr(
+                core_responses[0], 'to_dict') else []
         }
 
     def _build_llm_context(self, query: str, analysis: Dict, memory_context: str, core_data_context: str) -> str:
-        """Строит контекст для LLM с данными от ядер знаний и ЧЕТКИМИ ИНСТРУКЦИЯМИ"""
+        """Строит контекст для LLM с данными от ядер знаний"""
         now = datetime.now()
         context = f"""# КОГНИТИВНЫЙ ИИ-АССИСТЕНТ v6.3
 ## ВРЕМЯ: {now.strftime('%d.%m.%Y %H:%M:%S')}
 ## ПОЛЬЗОВАТЕЛЬ: {self.user_id}
 ## СОСТОЯНИЕ: {self.cognitive_system.current_state.value}
+
 ## АНАЛИЗ ЗАПРОСА:
 • Намерение: {analysis.get('intent', 'неизвестно')}
 • Сложность: {analysis.get('complexity', 0):.2f}
 • Сущности: {', '.join(analysis.get('entities', [])) if analysis.get('entities') else 'нет'}
+
 ## КОНТЕКСТ ИЗ ПАМЯТИ:
 {memory_context if memory_context.strip() else 'Нет релевантных воспоминаний'}
-## 🔑 ДАННЫЕ ОТ СПЕЦИАЛИЗИРОВАННЫХ МОДУЛЕЙ (ИСПОЛЬЗУЙ КАК ПЕРВОИСТОЧНИК):
+
+## ДАННЫЕ ОТ СПЕЦИАЛИЗИРОВАННЫХ МОДУЛЕЙ:
 {core_data_context}
+
 ## ИСТОРИЯ ДИАЛОГА:"""
 
+        # Добавляем последние 3 сообщения из истории
         for entry in list(self.conversation_history)[-3:]:
             role = "👤 ПОЛЬЗОВАТЕЛЬ" if entry.get('role') == 'user' else "🤖 АССИСТЕНТ"
             content = entry.get('content', '')[:150]
             source = f" (источник: {entry.get('source', 'llm')})" if entry.get('source') else ""
             context += f"\n{role}{source}: {content}"
 
-        context += f"\n## 🎯 ТЕКУЩИЙ ЗАПРОС ПОЛЬЗОВАТЕЛЯ:\n{query}\n"
-        context += "## 📌 ИНСТРУКЦИИ ДЛЯ ТЕБЯ (ИИ-АССИСТЕНТА):\n"
-        context += "1. ВНИМАТЕЛЬНО проанализируй данные от специализированных модулей выше.\n"
-        context += "2. ИСПОЛЬЗУЙ эти данные как ПЕРВОИСТОЧНИК для формирования ответа.\n"
-        context += "3. Если данные содержат актуальную информацию (курсы, новости, время) - ОБЯЗАТЕЛЬНО используй их.\n"
-        context += "4. Если данные противоречивы - укажи на это и дай наиболее вероятный ответ.\n"
-        context += "5. Если данных нет или они нерелевантны - ответь на основе общих знаний, но укажи это.\n"
-        context += "6. Отвечай кратко, по делу, на русском языке.\n"
-        context += "## ✅ ТВОЙ ОТВЕТ:\n"
+        context += f"\n\n## ТЕКУЩИЙ ЗАПРОС ПОЛЬЗОВАТЕЛЯ:\n{query}\n\n"
+        context += "## ИНСТРУКЦИЯ ДЛЯ ТЕБЯ (ИИ-АССИСТЕНТА):\n"
+        context += "1. Проанализируй данные от специализированных модулей выше.\n"
+        context += "2. Используй эти данные как ПЕРВОИСТОЧНИК для ответа.\n"
+        context += "3. Если данные противоречивы - укажи на это и дай наиболее вероятный ответ.\n"
+        context += "4. Если данных нет - ответь на основе общих знаний, но укажи это.\n"
+        context += "5. Отвечай кратко, по делу, на русском языке.\n\n"
+        context += "## ТВОЙ ОТВЕТ:"
 
         # Ограничиваем общий размер контекста
         return context[:4000] if len(context) > 4000 else context
 
-# ==================== ТЕЛЕГРАМ БОТ ====================
+
+# ==================== ТЕЛЕГРАМ БОТ (ИСПРАВЛЕННАЯ ВЕРСИЯ) ====================
 class AdvancedTelegramBot:
-    """Telegram бот с полной интеграцией данных от ядер"""
+    """Telegram бот с адаптивной памятью и правильным использованием context.bot"""
+
     def __init__(self):
         self.user_brains: Dict[str, AdvancedMiniBrain] = {}
         self.user_locks: Dict[str, asyncio.Lock] = {}
@@ -1333,6 +1475,7 @@ class AdvancedTelegramBot:
         logger.info("🚀 Бот инициализирован с защитой от параллельных запросов")
 
     async def get_user_lock(self, user_id: str) -> asyncio.Lock:
+        """Получение блокировки для пользователя"""
         if user_id not in self.user_locks:
             async with self.global_lock:
                 if user_id not in self.user_locks:
@@ -1340,11 +1483,13 @@ class AdvancedTelegramBot:
         return self.user_locks[user_id]
 
     def get_brain(self, user_id: str) -> AdvancedMiniBrain:
+        """Получает или создает мозг для пользователя"""
         if user_id not in self.user_brains:
             self.user_brains[user_id] = AdvancedMiniBrain(user_id)
         return self.user_brains[user_id]
 
     async def get_llm_response(self, context: str, temperature: float = 0.6) -> str:
+        """Асинхронный запрос к LLM без блокировки event loop"""
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
@@ -1360,6 +1505,7 @@ class AdvancedTelegramBot:
                         'stream': False
                     }
                 )
+
                 if response.status_code == 200:
                     data = response.json()
                     if 'choices' in data and len(data['choices']) > 0:
@@ -1367,6 +1513,7 @@ class AdvancedTelegramBot:
                     return "⚠️ LLM вернул пустой ответ"
                 else:
                     return f"❌ Ошибка LLM (HTTP {response.status_code}): {response.text[:150]}"
+
         except httpx.TimeoutException:
             return "⏱️ Таймаут запроса к LLM (60 сек)"
         except httpx.NetworkError as e:
@@ -1375,15 +1522,16 @@ class AdvancedTelegramBot:
             logger.error(f"Ошибка LLM запроса: {e}", exc_info=True)
             return f"❌ Внутренняя ошибка: {str(e)[:100]}"
 
+    # ИСПРАВЛЕНО: Добавлен параметр bot для правильной работы с библиотекой
     async def send_long_message(self, bot, chat_id: int, text: str,
                                 parse_mode: str = 'Markdown',
                                 disable_web_page_preview: bool = True) -> List[int]:
+        """
+        Отправка длинного сообщения частями с сохранением контекста
+        ПАРАМЕТР bot: экземпляр bot из context.bot (обязательный!)
+        """
         MAX_LENGTH = 4000
         message_ids = []
-
-        # Вспомогательная функция для безопасного экранирования Markdown
-        def escape_markdown(text: str) -> str:
-            return text.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
 
         if len(text) <= MAX_LENGTH:
             try:
@@ -1396,10 +1544,9 @@ class AdvancedTelegramBot:
                 return [msg.message_id]
             except Exception as e:
                 logger.warning(f"Ошибка отправки короткого сообщения: {e}")
-                # Повторная попытка без форматирования
                 msg = await bot.send_message(
                     chat_id=chat_id,
-                    text=escape_markdown(text),
+                    text=text.replace('*', '').replace('_', '').replace('`', ''),
                     parse_mode=None,
                     disable_web_page_preview=disable_web_page_preview
                 )
@@ -1407,24 +1554,30 @@ class AdvancedTelegramBot:
 
         parts = []
         remaining = text
+
         while remaining:
             if len(remaining) <= MAX_LENGTH:
                 parts.append(remaining)
                 break
+
             split_pos = -1
             pos = remaining.rfind('. ', 0, MAX_LENGTH)
             if pos != -1:
                 split_pos = pos + 1
+
             if split_pos == -1:
                 pos = remaining.rfind('\n', 0, MAX_LENGTH)
                 if pos != -1:
                     split_pos = pos + 1
+
             if split_pos == -1:
                 pos = remaining.rfind(', ', 0, MAX_LENGTH)
                 if pos != -1:
                     split_pos = pos + 1
+
             if split_pos == -1:
                 split_pos = MAX_LENGTH
+
             parts.append(remaining[:split_pos])
             remaining = remaining[split_pos:].lstrip()
 
@@ -1432,11 +1585,11 @@ class AdvancedTelegramBot:
         for i, part in enumerate(parts):
             if total_parts > 1:
                 if i == 0:
-                    part = f"{part}\n*(Продолжение {i + 2}/{total_parts}...)*"
+                    part = f"{part}\n\n*(Продолжение {i + 2}/{total_parts}...)*"
                 elif i == total_parts - 1:
-                    part = f"*(Часть {i + 1}/{total_parts})*\n{part}"
+                    part = f"*(Часть {i + 1}/{total_parts})*\n\n{part}"
                 else:
-                    part = f"*(Часть {i + 1}/{total_parts})*\n{part}\n*(Продолжение {i + 2}/{total_parts}...)*"
+                    part = f"*(Часть {i + 1}/{total_parts})*\n\n{part}\n\n*(Продолжение {i + 2}/{total_parts}...)*"
 
             try:
                 msg = await bot.send_message(
@@ -1451,8 +1604,8 @@ class AdvancedTelegramBot:
             except Exception as e:
                 logger.warning(f"Ошибка отправки части {i + 1}: {e}")
                 try:
-                    # Повторная попытка с экранированием
-                    clean_part = escape_markdown(part)
+                    clean_part = part.replace('*', '').replace('_', '').replace('`', '').replace('[', '').replace(']',
+                                                                                                                  '')
                     msg = await bot.send_message(
                         chat_id=chat_id,
                         text=clean_part,
@@ -1462,44 +1615,51 @@ class AdvancedTelegramBot:
                     message_ids.append(msg.message_id)
                 except Exception as e2:
                     logger.error(f"Полный провал отправки части {i + 1}: {e2}")
+
         return message_ids
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /start"""
         await update.message.reply_text(
-            "🤖 **КОГНИТИВНЫЙ ИИ-АССИСТЕНТ v6.3**\n"
-            "✨ **Ключевые улучшения:**\n"
-            "• ✅ Бот ТЕПЕРЬ ИСПОЛЬЗУЕТ результаты поиска и других ядер\n"
+            "🤖 **КОГНИТИВНЫЙ ИИ-АССИСТЕНТ v6.2**\n\n"
+            "✨ **Исправлено:**\n"
+            "• ✅ Устранена ошибка с отсутствующим атрибутом 'bot'\n"
             "• 🔒 Полная безопасность: защита от инъекций, валидация путей\n"
             "• ⚡ Асинхронность: полная поддержка асинхронных операций\n"
             "• 📦 Ограничения: размер файлов (10 МБ), длина сообщений, кэш с очисткой\n"
-            "• 🧠 Адаптивная память (кратковременная + долговременная)\n"
-            "• 💭 Воображение через обратную прогрессию\n"
-            "**Примеры запросов:**\n"
-            "• `курс доллара сегодня`\n"
-            "• `сколько будет 45 * 78`\n"
-            "• `какой сегодня день`\n"
-            "• `сохрани в файл: привет мир`\n"
+            "• 🧹 Параллелизм: защита от гонки состояний\n"
+            "• 📝 Логирование: структурированное с ротацией файлов\n"
+            "• 🧠 Адаптивная память (кратковременная + долговременная)\n\n"
+            "**Команды:**\n"
+            "/help - справка\n"
+            "/memory - статистика памяти\n"
+            "/imagine <цель> - использовать воображение\n"
+            "/clear - очистить память\n\n"
             "*Готов к работе!*",
             parse_mode='Markdown'
         )
 
     async def help_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /help"""
         await update.message.reply_text(
-            "📖 **СПРАВКА**\n"
+            "📖 **СПРАВКА**\n\n"
             "**Примеры:**\n"
-            "• `какой сегодня день` → точная дата и время\n"
-            "• `курс доллара` → актуальный курс из интернета\n"
-            "• `сколько будет 45 * 78` → мгновенный расчет\n"
-            "• `сохрани в файл test.txt: привет мир` → сохранение в файл\n"
-            "• `прочитай файл test.txt` → чтение файла\n"
-            "• `список файлов` → список всех файлов\n"
-            "**Важно:**\n"
-            "Бот автоматически использует специализированные модули\n"
-            "для получения актуальной информации из интернета!",
+            "• `какой сегодня день`\n"
+            "• `сколько будет 45 * 78`\n"
+            "• `сохрани в файл test.txt: привет мир`\n"
+            "• `прочитай файл test.txt`\n"
+            "• `список файлов`\n"
+            "• `найди информацию о Python`\n\n"
+            "**Память:**\n"
+            "Система автоматически запоминает важную информацию\n"
+            "и переносит её в долговременную память.\n\n"
+            "**Воображение:**\n"
+            "`/imagine создать бота` - система найдёт путь к цели",
             parse_mode='Markdown'
         )
 
     async def memory_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /memory - статистика памяти"""
         user_id = str(update.effective_user.id)
         brain = self.get_brain(user_id)
         stats = brain.cognitive_system.memory_system.get_memory_statistics()
@@ -1519,17 +1679,19 @@ class AdvancedTelegramBot:
         await update.message.reply_text(message, parse_mode='Markdown')
 
     async def imagine_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /imagine - использование воображения"""
         user_id = str(update.effective_user.id)
         brain = self.get_brain(user_id)
         if not context.args:
             await update.message.reply_text(
                 "💭 **Использование:**\n"
-                "`/imagine <ваша цель>`\n"
+                "`/imagine <ваша цель>`\n\n"
                 "**Пример:**\n"
                 "`/imagine создать чат-бота`",
                 parse_mode='Markdown'
             )
             return
+
         goal = ' '.join(context.args)[:200]
         steps = brain.cognitive_system.imagine_solution(goal, steps=4)
         if not steps:
@@ -1538,6 +1700,7 @@ class AdvancedTelegramBot:
                 "Попробуйте задать больше вопросов сначала."
             )
             return
+
         message = f"💭 **ВООБРАЖЕНИЕ: {goal}**\n"
         message += "**Возможные шаги:**\n"
         for step in steps:
@@ -1545,6 +1708,7 @@ class AdvancedTelegramBot:
         await update.message.reply_text(message, parse_mode='Markdown')
 
     async def clear_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда /clear - очистка памяти"""
         user_id = str(update.effective_user.id)
         if user_id in self.user_brains:
             brain = self.user_brains[user_id]
@@ -1558,11 +1722,15 @@ class AdvancedTelegramBot:
         else:
             await update.message.reply_text("✅ Память уже пуста")
 
+    # ИСПРАВЛЕНО: Передаем context.bot в send_long_message
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Обработка сообщений с защитой от параллельных запросов"""
         if not update.message or not update.message.text:
             return
+
         user_id = str(update.effective_user.id)
         text = update.message.text.strip()[:2000]
+
         if not text:
             return
 
@@ -1572,16 +1740,20 @@ class AdvancedTelegramBot:
                 chat_id=update.effective_chat.id,
                 action="typing"
             )
+
             brain = self.get_brain(user_id)
             start_time = time.time()
+
             try:
                 result = await brain.process(text, self.get_llm_response)
+
                 processing_time = time.time() - start_time
                 logger.info(f"⏱️ Пользователь {user_id}: обработка '{text[:30]}' за {processing_time:.2f}с")
 
                 if not result.get('need_llm'):
+                    # ИСПРАВЛЕНО: Передаем context.bot как первый параметр
                     await self.send_long_message(
-                        context.bot,
+                        context.bot,  # ← КРИТИЧЕСКИ ВАЖНО: передаем bot из context
                         chat_id=update.effective_chat.id,
                         text=result['response'],
                         parse_mode='Markdown',
@@ -1590,42 +1762,53 @@ class AdvancedTelegramBot:
                     return
 
                 llm_response = await self.get_llm_response(result['context'])
+
                 brain.conversation_history.append({
                     'role': 'assistant',
                     'content': llm_response[:500],
                     'source': 'llm'
                 })
+
                 brain.cognitive_system.save_state()
+
+                # ИСПРАВЛЕНО: Передаем context.bot как первый параметр
                 await self.send_long_message(
-                    context.bot,
+                    context.bot,  # ← КРИТИЧЕСКИ ВАЖНО: передаем bot из context
                     chat_id=update.effective_chat.id,
                     text=llm_response,
                     parse_mode='Markdown',
                     disable_web_page_preview=True
                 )
+
             except Exception as e:
                 error_msg = f"❌ Ошибка обработки: {str(e)[:150]}"
                 logger.error(f"Ошибка обработки сообщения от {user_id}: {e}", exc_info=True)
                 await update.message.reply_text(
-                    error_msg + "\nПопробуйте повторить запрос через несколько секунд.",
+                    error_msg + "\n\nПопробуйте повторить запрос через несколько секунд.",
                     parse_mode=None
                 )
 
+
 # ==================== ЗАПУСК ====================
 def main():
+    """Запуск бота"""
     logger.info("=" * 80)
-    logger.info("🤖 ЗАПУСК КОГНИТИВНОГО ИИ-АССИСТЕНТА v6.3 (полностью рабочая версия)")
+    logger.info("🤖 ЗАПУСК КОГНИТИВНОГО ИИ-АССИСТЕНТА v6.2 (исправлена ошибка с атрибутом bot)")
     logger.info("=" * 80)
+
     bot = AdvancedTelegramBot()
     application = Application.builder().token(TELEGRAM_TOKEN).build()
+
     application.add_handler(CommandHandler("start", bot.start))
     application.add_handler(CommandHandler("help", bot.help_cmd))
     application.add_handler(CommandHandler("memory", bot.memory_cmd))
     application.add_handler(CommandHandler("imagine", bot.imagine_cmd))
     application.add_handler(CommandHandler("clear", bot.clear_cmd))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.handle_message))
+
     logger.info("✅ Бот готов к работе!")
     logger.info("=" * 80 + "\n")
+
     try:
         application.run_polling(drop_pending_updates=True)
     except KeyboardInterrupt:
@@ -1633,6 +1816,7 @@ def main():
     except Exception as e:
         logger.exception(f"\n❌ Критическая ошибка: {e}")
         raise
+
 
 if __name__ == "__main__":
     main()

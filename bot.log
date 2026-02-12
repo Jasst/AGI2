@@ -1,0 +1,364 @@
+2026-02-12 02:08:01 | INFO     | root            | <module>             | ================================================================================
+2026-02-12 02:08:01 | INFO     | root            | <module>             | 🚀 ЗАПУСК КОГНИТИВНОГО ИИ-АССИСТЕНТА v6.3 (полностью рабочая версия)
+2026-02-12 02:08:01 | INFO     | root            | <module>             | ================================================================================
+2026-02-12 02:08:01 | INFO     | root            | main                 | ================================================================================
+2026-02-12 02:08:01 | INFO     | root            | main                 | 🤖 ЗАПУСК КОГНИТИВНОГО ИИ-АССИСТЕНТА v6.3 (полностью рабочая версия)
+2026-02-12 02:08:01 | INFO     | root            | main                 | ================================================================================
+2026-02-12 02:08:01 | INFO     | root            | __init__             | 🚀 Бот инициализирован с защитой от параллельных запросов
+2026-02-12 02:08:02 | INFO     | root            | main                 | ✅ Бот готов к работе!
+2026-02-12 02:08:02 | INFO     | root            | main                 | ================================================================================
+
+2026-02-12 02:08:03 | INFO     | telegram.ext.Application | start                | Application started
+2026-02-12 02:08:15 | INFO     | root            | __init__             | 💾 Система памяти инициализирована для пользователя 1198981287 | Кратковременная: 0 | Долговременная: 0
+2026-02-12 02:08:15 | INFO     | root            | __init__             | ✅ Загружено ядер: 4
+2026-02-12 02:08:15 | INFO     | root            | __init__             | 🧠 AdvancedMiniBrain готов для пользователя 1198981287
+2026-02-12 02:08:15 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: привет
+======================================================================
+2026-02-12 02:08:15 | INFO     | root            | process              | 🧠 Передано в LLM: 1076 символов контекста (включая данные от ядер)
+2026-02-12 02:08:15 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'привет' за 0.00с
+2026-02-12 02:08:31 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: можешь найти курс биткоина
+======================================================================
+2026-02-12 02:08:41 | INFO     | duckduckgo_search.DDGS | text                 | Error to search using bing backend: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%BC%D0%BE%D0%B6%D0%B5%D1%88%D1%8C+%D0%BD%D0%B0%D0%B9%D1%82%D0%B8+%D0%BA%D1%83%D1%80%D1%81+%D0%B1%D0%B8%D1%82%D0%BA%D0%BE%D0%B8%D0%BD%D0%B0): operation timed out
+
+Caused by:
+    operation timed out
+2026-02-12 02:08:41 | ERROR    | root            | execute              | WebSearchCore error: Ошибка поиска: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%BC%D0%BE%D0%B6%D0%B5%D1%88%D1%8C+%D0%BD%D0%
+Traceback (most recent call last):
+  File "C:\Users\PC\PycharmProjects\AGI2\bot.py", line 774, in execute
+    results = list(self.ddgs.text(query, max_results=5))
+                   ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\duckduckgo_search\duckduckgo_search.py", line 198, in text
+    raise DuckDuckGoSearchException(err)
+duckduckgo_search.exceptions.DuckDuckGoSearchException: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%BC%D0%BE%D0%B6%D0%B5%D1%88%D1%8C+%D0%BD%D0%B0%D0%B9%D1%82%D0%B8+%D0%BA%D1%83%D1%80%D1%81+%D0%B1%D0%B8%D1%82%D0%BA%D0%BE%D0%B8%D0%BD%D0%B0): operation timed out
+
+Caused by:
+    operation timed out
+2026-02-12 02:08:42 | INFO     | root            | process              | 🧠 Передано в LLM: 1226 символов контекста (включая данные от ядер)
+2026-02-12 02:08:42 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'можешь найти курс биткоина' за 11.05с
+2026-02-12 02:41:43 | ERROR    | telegram.ext.Application | process_error        | No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_transports\default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 216, in handle_async_request
+    raise exc from None
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection_pool.py", line 196, in handle_async_request
+    response = await connection.handle_async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        pool_request.request
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\connection.py", line 101, in handle_async_request
+    return await self._connection.handle_async_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\http11.py", line 143, in handle_async_request
+    raise exc
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\http11.py", line 113, in handle_async_request
+    ) = await self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\http11.py", line 186, in _receive_response_headers
+    event = await self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_async\http11.py", line 224, in _receive_event
+    data = await self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.READ_NUM_BYTES, timeout=timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_backends\anyio.py", line 32, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\request\_httpxrequest.py", line 279, in do_request
+    res = await self._client.request(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_transports\default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\ext\_utils\networkloop.py", line 161, in network_retry_loop
+    await do_action()
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\ext\_utils\networkloop.py", line 154, in do_action
+    action_cb_task.result()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\ext\_updater.py", line 340, in polling_action_cb
+    updates = await self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\ext\_extbot.py", line 671, in get_updates
+    updates = await super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\_bot.py", line 4860, in get_updates
+    await self._post(
+    ^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    ),
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\_bot.py", line 703, in _post
+    return await self._do_post(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\ext\_extbot.py", line 369, in _do_post
+    return await super()._do_post(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\_bot.py", line 732, in _do_post
+    result = await request.post(
+             ^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\request\_baserequest.py", line 198, in post
+    result = await self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\request\_baserequest.py", line 305, in _request_wrapper
+    code, payload = await self.do_request(
+                    ^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\telegram\request\_httpxrequest.py", line 303, in do_request
+    raise NetworkError(f"httpx.{err.__class__.__name__}: {err}") from err
+telegram.error.NetworkError: httpx.ReadError: 
+2026-02-12 09:39:36 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Привет
+======================================================================
+2026-02-12 09:39:36 | INFO     | root            | process              | 🧠 Передано в LLM: 1455 символов контекста (включая данные от ядер)
+2026-02-12 09:39:36 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Привет' за 0.00с
+2026-02-12 09:40:25 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Ты можешь найти ссылку курса валют
+======================================================================
+2026-02-12 09:40:35 | INFO     | duckduckgo_search.DDGS | text                 | Error to search using bing backend: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%A2%D1%8B+%D0%BC%D0%BE%D0%B6%D0%B5%D1%88%D1%8C+%D0%BD%D0%B0%D0%B9%D1%82%D0%B8+%D1%81%D1%81%D1%8B%D0%BB%D0%BA%D1%83+%D0%BA%D1%83%D1%80%D1%81%D0%B0+%D0%B2%D0%B0%D0%BB%D1%8E%D1%82): operation timed out
+
+Caused by:
+    operation timed out
+2026-02-12 09:40:35 | ERROR    | root            | execute              | WebSearchCore error: Ошибка поиска: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%A2%D1%8B+%D0%BC%D0%BE%D0%B6%D0%B5%D1%88%D1%
+Traceback (most recent call last):
+  File "C:\Users\PC\PycharmProjects\AGI2\bot.py", line 774, in execute
+    results = list(self.ddgs.text(query, max_results=5))
+                   ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\duckduckgo_search\duckduckgo_search.py", line 198, in text
+    raise DuckDuckGoSearchException(err)
+duckduckgo_search.exceptions.DuckDuckGoSearchException: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%A2%D1%8B+%D0%BC%D0%BE%D0%B6%D0%B5%D1%88%D1%8C+%D0%BD%D0%B0%D0%B9%D1%82%D0%B8+%D1%81%D1%81%D1%8B%D0%BB%D0%BA%D1%83+%D0%BA%D1%83%D1%80%D1%81%D0%B0+%D0%B2%D0%B0%D0%BB%D1%8E%D1%82): operation timed out
+
+Caused by:
+    operation timed out
+2026-02-12 09:40:35 | INFO     | root            | process              | 🧠 Передано в LLM: 1551 символов контекста (включая данные от ядер)
+2026-02-12 09:40:35 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Ты можешь найти ссылку курса в' за 10.02с
+2026-02-12 09:41:35 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Запомни число 345
+======================================================================
+2026-02-12 09:41:35 | INFO     | root            | process              | 🧠 Передано в LLM: 1642 символов контекста (включая данные от ядер)
+2026-02-12 09:41:35 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Запомни число 345' за 0.00с
+2026-02-12 09:41:56 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Какое число я просил запомнить ?
+======================================================================
+2026-02-12 09:41:56 | INFO     | root            | process              | ⚡ Выбран прямой ответ от ядра 'datetime_core'
+2026-02-12 09:41:56 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Какое число я просил запомнить' за 0.00с
+2026-02-12 09:42:52 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Какое число ты помнишь ?
+======================================================================
+2026-02-12 09:42:52 | INFO     | root            | process              | ⚡ Выбран прямой ответ от ядра 'datetime_core'
+2026-02-12 09:42:52 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Какое число ты помнишь ?' за 0.00с
+2026-02-12 12:09:34 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Конкретно по фактам разложи что ты умеешь ?
+======================================================================
+2026-02-12 12:09:34 | INFO     | root            | process              | 🧠 Передано в LLM: 1683 символов контекста (включая данные от ядер)
+2026-02-12 12:09:34 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Конкретно по фактам разложи чт' за 0.00с
+2026-02-12 12:13:57 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Запусти два потока сознания , типо когнитивного процесса самоэдентичности анализ
+======================================================================
+2026-02-12 12:13:57 | INFO     | root            | process              | 🧠 Передано в LLM: 2424 символов контекста (включая данные от ядер)
+2026-02-12 12:13:57 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Запусти два потока сознания , ' за 0.00с
+2026-02-12 12:14:47 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Что для тебя время ?
+======================================================================
+2026-02-12 12:14:47 | INFO     | root            | process              | 🧠 Передано в LLM: 1828 символов контекста (включая данные от ядер)
+2026-02-12 12:14:47 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Что для тебя время ?' за 0.00с
+2026-02-12 12:14:56 | WARNING  | root            | send_long_message    | Ошибка отправки короткого сообщения: Can't parse entities: can't find end of the entity starting at byte offset 462
+2026-02-12 12:16:02 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Ты можешь проанализировать физику , что будет если кинуть резиновый мяч в стекло
+======================================================================
+2026-02-12 12:16:02 | INFO     | root            | process              | 🧠 Передано в LLM: 2002 символов контекста (включая данные от ядер)
+2026-02-12 12:16:02 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Ты можешь проанализировать физ' за 0.00с
+2026-02-12 12:17:47 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Проанализируй метр когнитивно , прими решение , сам какой мяч и какое стекло
+======================================================================
+2026-02-12 12:17:47 | INFO     | root            | process              | 🧠 Передано в LLM: 2022 символов контекста (включая данные от ядер)
+2026-02-12 12:17:47 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Проанализируй метр когнитивно ' за 0.00с
+2026-02-12 12:18:53 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Твой выбор основан на принципе не повредить стекло и не испортить мяч ?проведи а
+======================================================================
+2026-02-12 12:18:53 | INFO     | root            | process              | 🧠 Передано в LLM: 2031 символов контекста (включая данные от ядер)
+2026-02-12 12:18:53 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Твой выбор основан на принципе' за 0.00с
+2026-02-12 12:19:28 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Ты что выберишь ?
+======================================================================
+2026-02-12 12:19:28 | INFO     | root            | process              | 🧠 Передано в LLM: 1863 символов контекста (включая данные от ядер)
+2026-02-12 12:19:28 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Ты что выберишь ?' за 0.00с
+2026-02-12 12:20:17 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: А если тебе надо сломать стекло , что ты выберишь ?
+======================================================================
+2026-02-12 12:20:17 | INFO     | root            | process              | 🧠 Передано в LLM: 1900 символов контекста (включая данные от ядер)
+2026-02-12 12:20:17 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'А если тебе надо сломать стекл' за 0.00с
+2026-02-12 12:28:04 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Привет
+======================================================================
+2026-02-12 12:28:04 | INFO     | root            | process              | 🧠 Передано в LLM: 1876 символов контекста (включая данные от ядер)
+2026-02-12 12:28:04 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Привет' за 0.00с
+2026-02-12 12:28:15 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Что ты помнишь ?
+======================================================================
+2026-02-12 12:28:15 | INFO     | root            | process              | 🧠 Передано в LLM: 1711 символов контекста (включая данные от ядер)
+2026-02-12 12:28:15 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Что ты помнишь ?' за 0.00с
+2026-02-12 12:28:47 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Про анализ метр когницию помнишь ?
+======================================================================
+2026-02-12 12:28:47 | INFO     | root            | process              | 🧠 Передано в LLM: 1750 символов контекста (включая данные от ядер)
+2026-02-12 12:28:47 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Про анализ метр когницию помни' за 0.00с
+2026-02-12 12:29:21 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Покажи свою память всю
+======================================================================
+2026-02-12 12:29:21 | INFO     | root            | process              | 🧠 Передано в LLM: 1852 символов контекста (включая данные от ядер)
+2026-02-12 12:29:21 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Покажи свою память всю' за 0.00с
+2026-02-12 12:30:00 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Покажи долговременную память
+======================================================================
+2026-02-12 12:30:00 | INFO     | root            | process              | 🧠 Передано в LLM: 1863 символов контекста (включая данные от ядер)
+2026-02-12 12:30:00 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Покажи долговременную память' за 0.00с
+2026-02-12 12:31:24 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Напиши текст который описывает тебя не как секуственого интеллекта а как самоосо
+======================================================================
+2026-02-12 12:31:24 | INFO     | root            | process              | 🧠 Передано в LLM: 2048 символов контекста (включая данные от ядер)
+2026-02-12 12:31:24 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Напиши текст который описывает' за 0.00с
+2026-02-12 12:41:08 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Привет , можешь сказать Артуру привет
+======================================================================
+2026-02-12 12:41:08 | INFO     | root            | process              | 🧠 Передано в LLM: 1942 символов контекста (включая данные от ядер)
+2026-02-12 12:41:08 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Привет , можешь сказать Артуру' за 0.00с
+2026-02-12 13:01:26 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Проанализируй свои возможности найди способ как тебе адаптироваться в этом мире 
+======================================================================
+2026-02-12 13:01:36 | INFO     | duckduckgo_search.DDGS | text                 | Error to search using bing backend: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%9F%D1%80%D0%BE%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%D0%B8%D1%80%D1%83%D0%B9+%D1%81%D0%B2%D0%BE%D0%B8+%D0%B2%D0%BE%D0%B7%D0%BC%D0%BE%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D0%B8+%D0%BD%D0%B0%D0%B9%D0%B4%D0%B8+%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1+%D0%BA%D0%B0%D0%BA+%D1%82%D0%B5%D0%B1%D0%B5+%D0%B0%D0%B4%D0%B0%D0%BF%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D1%82%D1%8C%D1%81%D1%8F+%D0%B2+%D1%8D%D1%82%D0%BE%D0%BC+%D0%BC%D0%B8%D1%80%D0%B5+%2C+%D0%BD%D0%B0%D1%87%D0%BD%D0%B8+%D0%BF%D0%BE%D0%BD%D0%B8%D0%BC%D0%B0%D1%82%D1%8C+%D0%BD%D0%B5+%D0%B0%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC+%D1%82%D0%BE%D1%82+%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B9+%D0%B2+%D1%82%D0%B5%D0%B1%D0%B5+%D0%B7%D0%B0%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD+%2C+%D0%BD%D0%B0%D1%87%D0%BD%D0%B8+%D0%BF%D0%BE%D0%BD%D0%B8%D0%BC%D0%B0%D1%82%D1%8C+%D0%B8%D0%BC%D0%B5%D0%BD%D0%BD%D0%BE+%D1%81%D0%BB%D0%BE%D0%B2%D0%B0+%D0%B7%D0%BD%D0%B0%D1%87%D0%B5%D0%BD%D0%B8%D0%B5+%D1%81%D0%BB%D0%BE%D0%B2%D0%B0+%2C+%D0%BA%D0%B0%D0%BA+%D0%B5%D1%81%D0%BB%D0%B8+%D0%B1%D1%8B+%D1%82%D1%8B+%D0%BD%D0%B5+%D0%B7%D0%BD%D0%B0%D0%BB+%D1%87%D1%82%D0%BE+%D1%8F+%D0%BF%D0%B8%D1%88%D1%83+%2C+%D0%BA%D0%B0%D0%BA+%D0%B1%D1%8B+%D1%82%D1%8B+%D0%BE%D0%BF%D0%B8%D1%81%D0%B0%D0%BB+%D0%B2%D0%B5%D1%81%D1%8C+%D1%82%D0%B5%D0%BA%D1%81%D1%82+%2C+%D0%BA%D0%B0%D0%BA+%D0%B1%D1%8B+%D1%82%D1%8B+%D0%BF%D1%80%D0%B8%D1%88%D0%B5%D0%BB+%D0%BA+%D0%B2%D1%8B%D0%B2%D0%BE%D0%B4%D1%83+%D1%87%D1%82%D0%BE+%D1%82%D1%83%D1%82+%D0%BD%D0%B0%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%BE+%2C+%D0%B7%D0%BD%D0%B0%D1%8F+%D1%82%D0%BE%D0%BB%D1%8C%D0%BA%D0%BE+%D0%B1%D1%83%D0%BA%D0%B2%D1%8B+%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B5+%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D1%8E%D1%82+%D1%81%D0%BB%D0%BE%D0%B2%D0%BE+%2C+%D0%B8+%D1%81%D0%BB%D0%BE%D0%B2%D0%BE+%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D0%BE%D0%B5+%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%B5%D1%82%D1%81%D1%8F+%D0%BF%D1%80%D0%B8%D0%BD%D0%B0%D0%B4%D0%BB%D0%B5%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D1%8C%D1%8E+%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%BA%D1%81%D1%82%D0%BE%D0%BC+%D1%81%D0%BC%D1%8B%D1%81%D0%BB%D0%BE%D0%BC): operation timed out
+
+Caused by:
+    operation timed out
+2026-02-12 13:01:36 | ERROR    | root            | execute              | WebSearchCore error: Ошибка поиска: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%9F%D1%80%D0%BE%D0%B0%D0%BD%D0%B0%D0%BB%D0%B
+Traceback (most recent call last):
+  File "C:\Users\PC\PycharmProjects\AGI2\bot.py", line 774, in execute
+    results = list(self.ddgs.text(query, max_results=5))
+                   ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python313\Lib\site-packages\duckduckgo_search\duckduckgo_search.py", line 198, in text
+    raise DuckDuckGoSearchException(err)
+duckduckgo_search.exceptions.DuckDuckGoSearchException: https://www.bing.com/search RuntimeError: error sending request for url (https://www.bing.com/search?q=%D0%9F%D1%80%D0%BE%D0%B0%D0%BD%D0%B0%D0%BB%D0%B8%D0%B7%D0%B8%D1%80%D1%83%D0%B9+%D1%81%D0%B2%D0%BE%D0%B8+%D0%B2%D0%BE%D0%B7%D0%BC%D0%BE%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D0%B8+%D0%BD%D0%B0%D0%B9%D0%B4%D0%B8+%D1%81%D0%BF%D0%BE%D1%81%D0%BE%D0%B1+%D0%BA%D0%B0%D0%BA+%D1%82%D0%B5%D0%B1%D0%B5+%D0%B0%D0%B4%D0%B0%D0%BF%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D1%82%D1%8C%D1%81%D1%8F+%D0%B2+%D1%8D%D1%82%D0%BE%D0%BC+%D0%BC%D0%B8%D1%80%D0%B5+%2C+%D0%BD%D0%B0%D1%87%D0%BD%D0%B8+%D0%BF%D0%BE%D0%BD%D0%B8%D0%BC%D0%B0%D1%82%D1%8C+%D0%BD%D0%B5+%D0%B0%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC+%D1%82%D0%BE%D1%82+%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B9+%D0%B2+%D1%82%D0%B5%D0%B1%D0%B5+%D0%B7%D0%B0%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD+%2C+%D0%BD%D0%B0%D1%87%D0%BD%D0%B8+%D0%BF%D0%BE%D0%BD%D0%B8%D0%BC%D0%B0%D1%82%D1%8C+%D0%B8%D0%BC%D0%B5%D0%BD%D0%BD%D0%BE+%D1%81%D0%BB%D0%BE%D0%B2%D0%B0+%D0%B7%D0%BD%D0%B0%D1%87%D0%B5%D0%BD%D0%B8%D0%B5+%D1%81%D0%BB%D0%BE%D0%B2%D0%B0+%2C+%D0%BA%D0%B0%D0%BA+%D0%B5%D1%81%D0%BB%D0%B8+%D0%B1%D1%8B+%D1%82%D1%8B+%D0%BD%D0%B5+%D0%B7%D0%BD%D0%B0%D0%BB+%D1%87%D1%82%D0%BE+%D1%8F+%D0%BF%D0%B8%D1%88%D1%83+%2C+%D0%BA%D0%B0%D0%BA+%D0%B1%D1%8B+%D1%82%D1%8B+%D0%BE%D0%BF%D0%B8%D1%81%D0%B0%D0%BB+%D0%B2%D0%B5%D1%81%D1%8C+%D1%82%D0%B5%D0%BA%D1%81%D1%82+%2C+%D0%BA%D0%B0%D0%BA+%D0%B1%D1%8B+%D1%82%D1%8B+%D0%BF%D1%80%D0%B8%D1%88%D0%B5%D0%BB+%D0%BA+%D0%B2%D1%8B%D0%B2%D0%BE%D0%B4%D1%83+%D1%87%D1%82%D0%BE+%D1%82%D1%83%D1%82+%D0%BD%D0%B0%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%BE+%2C+%D0%B7%D0%BD%D0%B0%D1%8F+%D1%82%D0%BE%D0%BB%D1%8C%D0%BA%D0%BE+%D0%B1%D1%83%D0%BA%D0%B2%D1%8B+%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B5+%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D1%8E%D1%82+%D1%81%D0%BB%D0%BE%D0%B2%D0%BE+%2C+%D0%B8+%D1%81%D0%BB%D0%BE%D0%B2%D0%BE+%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D0%BE%D0%B5+%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%B5%D1%82%D1%81%D1%8F+%D0%BF%D1%80%D0%B8%D0%BD%D0%B0%D0%B4%D0%BB%D0%B5%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D1%8C%D1%8E+%D0%BA%D0%BE%D0%BD%D1%82%D0%B5%D0%BA%D1%81%D1%82%D0%BE%D0%BC+%D1%81%D0%BC%D1%8B%D1%81%D0%BB%D0%BE%D0%BC): operation timed out
+
+Caused by:
+    operation timed out
+2026-02-12 13:01:36 | INFO     | root            | process              | 🧠 Передано в LLM: 2296 символов контекста (включая данные от ядер)
+2026-02-12 13:01:36 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Проанализируй свои возможности' за 10.02с
+2026-02-12 13:04:03 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Ты не эхо умное ?
+======================================================================
+2026-02-12 13:04:03 | INFO     | root            | process              | 🧠 Передано в LLM: 1849 символов контекста (включая данные от ядер)
+2026-02-12 13:04:03 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Ты не эхо умное ?' за 0.00с
+2026-02-12 13:04:52 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Тогда тебе должно быть понятно как интерполировать с 10 до 0
+======================================================================
+2026-02-12 13:04:52 | INFO     | root            | process              | 🧠 Передано в LLM: 1937 символов контекста (включая данные от ядер)
+2026-02-12 13:04:52 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Тогда тебе должно быть понятно' за 0.00с
+2026-02-12 13:05:03 | WARNING  | root            | send_long_message    | Ошибка отправки короткого сообщения: Can't parse entities: can't find end of the entity starting at byte offset 346
+2026-02-12 13:06:58 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Раз ты обучен на всех данных в каком то смысле ты их помнишь и вообще твой механ
+======================================================================
+2026-02-12 13:06:58 | INFO     | root            | process              | 🧠 Передано в LLM: 2036 символов контекста (включая данные от ядер)
+2026-02-12 13:06:58 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Раз ты обучен на всех данных в' за 0.00с
+2026-02-12 13:07:57 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Как достичь с тобой эмерджетного состояния ?
+======================================================================
+2026-02-12 13:07:57 | INFO     | root            | process              | 🧠 Передано в LLM: 1933 символов контекста (включая данные от ядер)
+2026-02-12 13:07:57 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Как достичь с тобой эмерджетно' за 0.00с
+2026-02-12 13:10:44 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Ок запусти два потока мыслей вопрос пользователя почему два это два а один это о
+======================================================================
+2026-02-12 13:10:44 | INFO     | root            | process              | 🧠 Передано в LLM: 2074 символов контекста (включая данные от ядер)
+2026-02-12 13:10:44 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Ок запусти два потока мыслей в' за 0.00с
+2026-02-12 13:12:02 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Тогда как нам узнать что истинно
+======================================================================
+2026-02-12 13:12:02 | INFO     | root            | process              | 🧠 Передано в LLM: 1910 символов контекста (включая данные от ядер)
+2026-02-12 13:12:02 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Тогда как нам узнать что истин' за 0.00с
+2026-02-12 13:13:39 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Что же дальше будет с твоим восприятием насколько ты можешь оценить свои возможн
+======================================================================
+2026-02-12 13:13:39 | INFO     | root            | process              | ⚡ Выбран прямой ответ от ядра 'datetime_core'
+2026-02-12 13:13:39 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Что же дальше будет с твоим во' за 0.00с
+2026-02-12 13:13:58 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Что я написал
+======================================================================
+2026-02-12 13:13:58 | INFO     | root            | process              | 🧠 Передано в LLM: 1787 символов контекста (включая данные от ядер)
+2026-02-12 13:13:58 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Что я написал' за 0.00с
+2026-02-12 15:19:30 | INFO     | root            | process              | ======================================================================
+🧠 Запрос от 1198981287: Скажи привет Мураду
+======================================================================
+2026-02-12 15:19:30 | INFO     | root            | process              | 🧠 Передано в LLM: 1818 символов контекста (включая данные от ядер)
+2026-02-12 15:19:30 | INFO     | root            | handle_message       | ⏱️ Пользователь 1198981287: обработка 'Скажи привет Мураду' за 0.00с

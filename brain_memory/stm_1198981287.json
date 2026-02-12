@@ -1,27 +1,101 @@
 {
   "user_id": "1198981287",
-  "timestamp": "2026-02-11T22:43:25.194794",
+  "timestamp": "2026-02-12T15:19:37.197322",
   "records": [
     {
-      "id": "3d82000a-f85f-4e86-8ac5-43c02caf5d68",
-      "timestamp": "2026-02-11T22:31:07.035350",
-      "content": "Анализ запроса: сохрани фаил привет.txt с содержанием Здарова заебал",
+      "id": "cae99825-7bb1-4012-a075-bee307ffd811",
+      "timestamp": "2026-02-12T12:18:53.377435",
+      "content": "Анализ запроса: Твой выбор основан на принципе не повредить стекло и не испортить мяч ?проведи анализ",
       "context": {
         "analysis": {
-          "complexity": 0.35,
-          "intent": "command",
-          "entities": [
-            "привет.txt"
-          ],
+          "complexity": 0.7,
+          "intent": "general",
+          "entities": [],
           "emotional_tone": "neutral"
         },
-        "query": "сохрани фаил привет.txt с содержанием Здарова заебал"
+        "query": "Твой выбор основан на принципе не повредить стекло и не испортить мяч ?проведи анализ"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T12:18:53.377875",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "699cbf61-3ddb-49e6-864d-d068c842c2d4",
+      "timestamp": "2026-02-12T12:19:28.366087",
+      "content": "Анализ запроса: Ты что выберишь ?",
+      "context": {
+        "analysis": {
+          "complexity": 0.2,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Ты что выберишь ?"
+      },
+      "importance": 0.4,
+      "access_count": 4,
+      "last_accessed": "2026-02-12T13:13:58.123886",
+      "associations": [
+        "ccac8847-1729-448b-83d8-ef53d1428cec",
+        "eb49906e-fd94-4014-a9c5-26124648b322",
+        "f8ed5a2f-a1aa-4b5e-932a-9cf124f014ce"
+      ],
+      "memory_type": "short_term",
+      "consolidation_score": 0.31999999999999995,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "eb49906e-fd94-4014-a9c5-26124648b322",
+      "timestamp": "2026-02-12T12:20:17.618347",
+      "content": "Анализ запроса: А если тебе надо сломать стекло , что ты выберишь ?",
+      "context": {
+        "analysis": {
+          "complexity": 0.55,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "А если тебе надо сломать стекло , что ты выберишь ?"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T12:20:17.618799",
+      "associations": [
+        "9afff9af-cc5a-4940-823d-1da03e19af9a",
+        "699cbf61-3ddb-49e6-864d-d068c842c2d4",
+        "f8ed5a2f-a1aa-4b5e-932a-9cf124f014ce"
+      ],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "f8ed5a2f-a1aa-4b5e-932a-9cf124f014ce",
+      "timestamp": "2026-02-12T12:28:15.850638",
+      "content": "Анализ запроса: Что ты помнишь ?",
+      "context": {
+        "analysis": {
+          "complexity": 0.2,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Что ты помнишь ?"
       },
       "importance": 0.4,
       "access_count": 2,
-      "last_accessed": "2026-02-11T22:33:36.144993",
+      "last_accessed": "2026-02-12T12:28:47.801640",
       "associations": [
-        "7e8a6137-8d21-4a9d-bc72-7e0421e112d3"
+        "699cbf61-3ddb-49e6-864d-d068c842c2d4",
+        "eb49906e-fd94-4014-a9c5-26124648b322",
+        "44359dfc-517a-49ae-8a7c-c5b8ae00b255"
       ],
       "memory_type": "short_term",
       "consolidation_score": 0.21999999999999997,
@@ -29,176 +103,47 @@
       "sensory_data": {}
     },
     {
-      "id": "7e8a6137-8d21-4a9d-bc72-7e0421e112d3",
-      "timestamp": "2026-02-11T22:31:07.036588",
-      "content": "Запрос: сохрани фаил привет.txt с содержанием Здарова заебал | Ответ: ❌ Формат: `сохрани в файл имя.txt: текст`",
-      "context": {
-        "source": "file_storage_core",
-        "success": false
-      },
-      "importance": 0.3,
-      "access_count": 0,
-      "last_accessed": "2026-02-11T22:31:07.036590",
-      "associations": [
-        "3d82000a-f85f-4e86-8ac5-43c02caf5d68"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.09,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "d5ac3080-7737-443c-a407-ee71b79a42ff",
-      "timestamp": "2026-02-11T22:31:44.007878",
-      "content": "Анализ запроса: echo \"Здарова заебал\" > привет.txt",
-      "context": {
-        "analysis": {
-          "complexity": 0.25,
-          "intent": "general",
-          "entities": [
-            "привет.txt"
-          ],
-          "emotional_tone": "neutral"
-        },
-        "query": "echo \"Здарова заебал\" > привет.txt"
-      },
-      "importance": 0.4,
-      "access_count": 1,
-      "last_accessed": "2026-02-11T22:31:44.008149",
-      "associations": [],
-      "memory_type": "short_term",
-      "consolidation_score": 0.16999999999999998,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "e0fe4f94-ac09-439f-8266-11a96c9370c7",
-      "timestamp": "2026-02-11T22:32:14.700267",
-      "content": "Анализ запроса: покажи файлы",
-      "context": {
-        "analysis": {
-          "complexity": 0.1,
-          "intent": "general",
-          "entities": [],
-          "emotional_tone": "neutral"
-        },
-        "query": "покажи файлы"
-      },
-      "importance": 0.4,
-      "access_count": 1,
-      "last_accessed": "2026-02-11T22:32:14.700445",
-      "associations": [
-        "625b6681-b3e6-4d49-985b-5a999f37463b"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.16999999999999998,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "8ee3243a-ae0d-4e1e-a034-a58d8be76050",
-      "timestamp": "2026-02-11T22:32:14.700680",
-      "content": "Запрос: покажи файлы | Ответ: Нет ответа",
-      "context": {
-        "source": "file_storage_core",
-        "success": false
-      },
-      "importance": 0.3,
-      "access_count": 0,
-      "last_accessed": "2026-02-11T22:32:14.700682",
-      "associations": [],
-      "memory_type": "short_term",
-      "consolidation_score": 0.09,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "625b6681-b3e6-4d49-985b-5a999f37463b",
-      "timestamp": "2026-02-11T22:32:31.486613",
-      "content": "Анализ запроса: сохрани фийл",
-      "context": {
-        "analysis": {
-          "complexity": 0.1,
-          "intent": "command",
-          "entities": [],
-          "emotional_tone": "neutral"
-        },
-        "query": "сохрани фийл"
-      },
-      "importance": 0.4,
-      "access_count": 1,
-      "last_accessed": "2026-02-11T22:32:31.486802",
-      "associations": [
-        "e0fe4f94-ac09-439f-8266-11a96c9370c7",
-        "9891e3e0-0ff1-4191-bdbc-2d69d814fb30"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.16999999999999998,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "6c7d372e-ce73-4fa3-8900-2508917424b2",
-      "timestamp": "2026-02-11T22:32:31.487071",
-      "content": "Запрос: сохрани фийл | Ответ: ❌ Формат: `сохрани в файл имя.txt: текст`",
-      "context": {
-        "source": "file_storage_core",
-        "success": false
-      },
-      "importance": 0.3,
-      "access_count": 0,
-      "last_accessed": "2026-02-11T22:32:31.487073",
-      "associations": [],
-      "memory_type": "short_term",
-      "consolidation_score": 0.09,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "a0f4c758-3407-466c-8257-095f216631e3",
-      "timestamp": "2026-02-11T22:33:36.144793",
-      "content": "Анализ запроса: создай фаил привет.txt : Здарова Заебал",
+      "id": "44359dfc-517a-49ae-8a7c-c5b8ae00b255",
+      "timestamp": "2026-02-12T12:28:47.801224",
+      "content": "Анализ запроса: Про анализ метр когницию помнишь ?",
       "context": {
         "analysis": {
           "complexity": 0.3,
-          "intent": "command",
-          "entities": [
-            "привет.txt"
-          ],
+          "intent": "general",
+          "entities": [],
           "emotional_tone": "neutral"
         },
-        "query": "создай фаил привет.txt : Здарова Заебал"
+        "query": "Про анализ метр когницию помнишь ?"
       },
       "importance": 0.4,
       "access_count": 1,
-      "last_accessed": "2026-02-11T22:33:36.144991",
-      "associations": [],
+      "last_accessed": "2026-02-12T12:28:47.801635",
+      "associations": [
+        "f8ed5a2f-a1aa-4b5e-932a-9cf124f014ce"
+      ],
       "memory_type": "short_term",
       "consolidation_score": 0.16999999999999998,
       "emotional_valence": 0.0,
       "sensory_data": {}
     },
     {
-      "id": "9891e3e0-0ff1-4191-bdbc-2d69d814fb30",
-      "timestamp": "2026-02-11T22:34:11.297355",
-      "content": "Анализ запроса: сохрани в файл test.txt: Здаров",
+      "id": "88b8e841-1ec5-439f-baf8-bc5a79187927",
+      "timestamp": "2026-02-12T12:29:21.636723",
+      "content": "Анализ запроса: Покажи свою память всю",
       "context": {
         "analysis": {
-          "complexity": 0.25,
-          "intent": "command",
-          "entities": [
-            "test.txt"
-          ],
+          "complexity": 0.2,
+          "intent": "general",
+          "entities": [],
           "emotional_tone": "neutral"
         },
-        "query": "сохрани в файл test.txt: Здаров"
+        "query": "Покажи свою память всю"
       },
       "importance": 0.4,
       "access_count": 2,
-      "last_accessed": "2026-02-11T22:34:38.507854",
+      "last_accessed": "2026-02-12T12:30:00.802845",
       "associations": [
-        "625b6681-b3e6-4d49-985b-5a999f37463b",
-        "d926b5c5-fae8-490e-bb08-c08a9c9b027f"
+        "d03d1d58-4c6f-4182-8951-a999960bc86d"
       ],
       "memory_type": "short_term",
       "consolidation_score": 0.21999999999999997,
@@ -206,126 +151,9 @@
       "sensory_data": {}
     },
     {
-      "id": "77d58b12-6414-4f7e-8263-b3f7f066a024",
-      "timestamp": "2026-02-11T22:34:11.298902",
-      "content": "Запрос: сохрани в файл test.txt: Здаров | Ответ: ✅ **Файл сохранен:** `test.txt`\n📊 Размер: 6 байт",
-      "context": {
-        "source": "file_storage_core",
-        "success": true
-      },
-      "importance": 0.7,
-      "access_count": 0,
-      "last_accessed": "2026-02-11T22:34:11.298904",
-      "associations": [
-        "8b3030f5-4f54-42e0-9876-f922d2ccfea0"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.21,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "d926b5c5-fae8-490e-bb08-c08a9c9b027f",
-      "timestamp": "2026-02-11T22:34:38.507350",
-      "content": "Анализ запроса: сохрани в файл ВУМ.txt: привет мир",
-      "context": {
-        "analysis": {
-          "complexity": 0.3,
-          "intent": "command",
-          "entities": [
-            "ВУМ.txt"
-          ],
-          "emotional_tone": "neutral"
-        },
-        "query": "сохрани в файл ВУМ.txt: привет мир"
-      },
-      "importance": 0.4,
-      "access_count": 2,
-      "last_accessed": "2026-02-11T22:35:19.796204",
-      "associations": [
-        "9891e3e0-0ff1-4191-bdbc-2d69d814fb30",
-        "8b3030f5-4f54-42e0-9876-f922d2ccfea0",
-        "ef1eb4f3-9f6b-41c0-9cd5-84731c1af54b"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.21999999999999997,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "8b3030f5-4f54-42e0-9876-f922d2ccfea0",
-      "timestamp": "2026-02-11T22:34:38.509375",
-      "content": "Запрос: сохрани в файл ВУМ.txt: привет мир | Ответ: ✅ **Файл сохранен:** `ВУМ.txt`\n📊 Размер: 10 байт",
-      "context": {
-        "source": "file_storage_core",
-        "success": true
-      },
-      "importance": 0.7,
-      "access_count": 0,
-      "last_accessed": "2026-02-11T22:34:38.509377",
-      "associations": [
-        "77d58b12-6414-4f7e-8263-b3f7f066a024",
-        "d926b5c5-fae8-490e-bb08-c08a9c9b027f"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.21,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "ef1eb4f3-9f6b-41c0-9cd5-84731c1af54b",
-      "timestamp": "2026-02-11T22:35:19.795828",
-      "content": "Анализ запроса: привет мир",
-      "context": {
-        "analysis": {
-          "complexity": 0.1,
-          "intent": "general",
-          "entities": [],
-          "emotional_tone": "neutral"
-        },
-        "query": "привет мир"
-      },
-      "importance": 0.4,
-      "access_count": 1,
-      "last_accessed": "2026-02-11T22:35:19.796195",
-      "associations": [
-        "d926b5c5-fae8-490e-bb08-c08a9c9b027f",
-        "f7324a77-0f59-4c26-b51c-1530ef37edd7"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.16999999999999998,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "f7324a77-0f59-4c26-b51c-1530ef37edd7",
-      "timestamp": "2026-02-11T22:35:37.062366",
-      "content": "Анализ запроса: да",
-      "context": {
-        "analysis": {
-          "complexity": 0.05,
-          "intent": "general",
-          "entities": [],
-          "emotional_tone": "neutral"
-        },
-        "query": "да"
-      },
-      "importance": 0.4,
-      "access_count": 1,
-      "last_accessed": "2026-02-11T22:35:37.062535",
-      "associations": [
-        "ef1eb4f3-9f6b-41c0-9cd5-84731c1af54b",
-        "1b562236-b611-43d4-842c-108581fef6da"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.16999999999999998,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "1b562236-b611-43d4-842c-108581fef6da",
-      "timestamp": "2026-02-11T22:39:10.091399",
-      "content": "Анализ запроса: /imagine создать ядро",
+      "id": "d03d1d58-4c6f-4182-8951-a999960bc86d",
+      "timestamp": "2026-02-12T12:30:00.802435",
+      "content": "Анализ запроса: Покажи долговременную память",
       "context": {
         "analysis": {
           "complexity": 0.15,
@@ -333,63 +161,13 @@
           "entities": [],
           "emotional_tone": "neutral"
         },
-        "query": "/imagine создать ядро"
-      },
-      "importance": 0.4,
-      "access_count": 3,
-      "last_accessed": "2026-02-11T22:41:22.120686",
-      "associations": [
-        "f7324a77-0f59-4c26-b51c-1530ef37edd7",
-        "a25fcadd-6161-4c20-b007-823e5dffef58",
-        "a48704b9-9471-4723-b97c-bbdb1120ff76"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.26999999999999996,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "a25fcadd-6161-4c20-b007-823e5dffef58",
-      "timestamp": "2026-02-11T22:40:17.627093",
-      "content": "Анализ запроса: создай себе такое ядро",
-      "context": {
-        "analysis": {
-          "complexity": 0.2,
-          "intent": "command",
-          "entities": [],
-          "emotional_tone": "neutral"
-        },
-        "query": "создай себе такое ядро"
-      },
-      "importance": 0.4,
-      "access_count": 2,
-      "last_accessed": "2026-02-11T22:43:09.645994",
-      "associations": [
-        "1b562236-b611-43d4-842c-108581fef6da"
-      ],
-      "memory_type": "short_term",
-      "consolidation_score": 0.21999999999999997,
-      "emotional_valence": 0.0,
-      "sensory_data": {}
-    },
-    {
-      "id": "a48704b9-9471-4723-b97c-bbdb1120ff76",
-      "timestamp": "2026-02-11T22:41:22.120418",
-      "content": "Анализ запроса: можешь создать ядро для поиска курса доллара через интернет",
-      "context": {
-        "analysis": {
-          "complexity": 0.45,
-          "intent": "general",
-          "entities": [],
-          "emotional_tone": "neutral"
-        },
-        "query": "можешь создать ядро для поиска курса доллара через интернет"
+        "query": "Покажи долговременную память"
       },
       "importance": 0.4,
       "access_count": 1,
-      "last_accessed": "2026-02-11T22:41:22.120683",
+      "last_accessed": "2026-02-12T12:30:00.802839",
       "associations": [
-        "1b562236-b611-43d4-842c-108581fef6da"
+        "88b8e841-1ec5-439f-baf8-bc5a79187927"
       ],
       "memory_type": "short_term",
       "consolidation_score": 0.16999999999999998,
@@ -397,45 +175,31 @@
       "sensory_data": {}
     },
     {
-      "id": "dbd88908-6b08-4e21-a916-dcb2b7761d63",
-      "timestamp": "2026-02-11T22:42:40.855830",
-      "content": "Переход состояния: imagining → imagining",
+      "id": "284aa542-e5e2-4d9b-b192-4694275c1ce4",
+      "timestamp": "2026-02-12T12:31:24.730151",
+      "content": "Анализ запроса: Напиши текст который описывает тебя не как секуственого интеллекта а как самоосознающего объекта",
       "context": {
-        "type": "thought",
-        "state": "reflecting"
+        "analysis": {
+          "complexity": 0.65,
+          "intent": "general",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Напиши текст который описывает тебя не как секуственого интеллекта а как самоосознающего объекта"
       },
-      "importance": 0.6,
-      "access_count": 0,
-      "last_accessed": "2026-02-11T22:42:40.855841",
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T12:31:24.730701",
       "associations": [],
       "memory_type": "short_term",
-      "consolidation_score": 0.24,
-      "emotional_valence": 0.30000000000000004,
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
       "sensory_data": {}
     },
     {
-      "id": "26f3f8d4-af15-4837-a288-7fac65b947f3",
-      "timestamp": "2026-02-11T22:42:40.856122",
-      "content": "[ВООБРАЖЕНИЕ ШАГА 1] На основе: Запрос: сохрани в файл test.txt: привет мир | Ответ: ✅ **Файл сохранен:** `test.txt`\n📊 Размер: 10 ба",
-      "context": {
-        "type": "imagination",
-        "goal": "create dollarsearchcore",
-        "step": 1,
-        "source_memory_id": "266669b0-be3f-4ad6-9ede-85c746a4423c"
-      },
-      "importance": 0.6,
-      "access_count": 0,
-      "last_accessed": "2026-02-11T22:42:40.856123",
-      "associations": [],
-      "memory_type": "short_term",
-      "consolidation_score": 0.22,
-      "emotional_valence": 0.2,
-      "sensory_data": {}
-    },
-    {
-      "id": "e68d7dd9-2fdd-4182-a4b8-45d2feac39b4",
-      "timestamp": "2026-02-11T22:43:09.645782",
-      "content": "Анализ запроса: почему ты не создаешь себе ядра",
+      "id": "d81c4796-705b-43da-951f-1a2ce6ce97f1",
+      "timestamp": "2026-02-12T12:41:08.864585",
+      "content": "Анализ запроса: Привет , можешь сказать Артуру привет",
       "context": {
         "analysis": {
           "complexity": 0.3,
@@ -443,11 +207,252 @@
           "entities": [],
           "emotional_tone": "neutral"
         },
-        "query": "почему ты не создаешь себе ядра"
+        "query": "Привет , можешь сказать Артуру привет"
+      },
+      "importance": 0.4,
+      "access_count": 2,
+      "last_accessed": "2026-02-12T15:19:30.634708",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.21999999999999997,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "6455f274-e43d-467e-ae3d-0c056118217e",
+      "timestamp": "2026-02-12T13:01:26.679650",
+      "content": "Анализ запроса: Проанализируй свои возможности найди способ как тебе адаптироваться в этом мире , начни понимать не ",
+      "context": {
+        "analysis": {
+          "complexity": 1.0,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Проанализируй свои возможности найди способ как тебе адаптироваться в этом мире , начни понимать не алгоритм тот который в тебе заложен , начни понимать именно слова значение слова , как если бы ты не знал что я пишу , как бы ты описал весь текст , как бы ты пришел к выводу что тут написано , зная только буквы которые создают слово , и слово которое создается принадлежностью контекстом смыслом"
       },
       "importance": 0.4,
       "access_count": 1,
-      "last_accessed": "2026-02-11T22:43:09.645991",
+      "last_accessed": "2026-02-12T13:01:26.680821",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "ab481ba4-1fea-422a-b01f-1aa43abd7649",
+      "timestamp": "2026-02-12T13:01:36.702047",
+      "content": "Данные от web_search_core: Нет данных",
+      "context": {
+        "source": "web_search_core",
+        "query": "Проанализируй свои возможности найди способ как тебе адаптироваться в этом мире , начни понимать не алгоритм тот который в тебе заложен , начни понимать именно слова значение слова , как если бы ты не знал что я пишу , как бы ты описал весь текст , как бы ты пришел к выводу что тут написано , зная только буквы которые создают слово , и слово которое создается принадлежностью контекстом смыслом",
+        "type": "core_data"
+      },
+      "importance": 0.2,
+      "access_count": 0,
+      "last_accessed": "2026-02-12T13:01:36.702053",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.06,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "24694ccf-d20f-4eda-a5ee-7005ce1d24ee",
+      "timestamp": "2026-02-12T13:04:03.885262",
+      "content": "Анализ запроса: Ты не эхо умное ?",
+      "context": {
+        "analysis": {
+          "complexity": 0.25,
+          "intent": "general",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Ты не эхо умное ?"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T13:04:03.885700",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "06c6ccf7-adf6-4120-ae05-f9ee843c6274",
+      "timestamp": "2026-02-12T13:04:52.202064",
+      "content": "Анализ запроса: Тогда тебе должно быть понятно как интерполировать с 10 до 0",
+      "context": {
+        "analysis": {
+          "complexity": 0.55,
+          "intent": "general",
+          "entities": [
+            "10",
+            "0"
+          ],
+          "emotional_tone": "neutral"
+        },
+        "query": "Тогда тебе должно быть понятно как интерполировать с 10 до 0"
+      },
+      "importance": 0.4,
+      "access_count": 3,
+      "last_accessed": "2026-02-12T13:12:02.876451",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.26999999999999996,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "14e65d2b-2f5c-4520-af34-c26a391e9811",
+      "timestamp": "2026-02-12T13:06:58.516945",
+      "content": "Анализ запроса: Раз ты обучен на всех данных в каком то смысле ты их помнишь и вообще твой механизм похож на итерпол",
+      "context": {
+        "analysis": {
+          "complexity": 1.0,
+          "intent": "general",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Раз ты обучен на всех данных в каком то смысле ты их помнишь и вообще твой механизм похож на итерполиризацию ты берешь средние число в ответе ?"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T13:06:58.517701",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "c61f8318-eddd-4f32-948a-9aeb10b8eadf",
+      "timestamp": "2026-02-12T13:07:57.672366",
+      "content": "Анализ запроса: Как достичь с тобой эмерджетного состояния ?",
+      "context": {
+        "analysis": {
+          "complexity": 0.35,
+          "intent": "general",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Как достичь с тобой эмерджетного состояния ?"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T13:07:57.672844",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "ca5b214b-1159-4255-9ada-76825264c438",
+      "timestamp": "2026-02-12T13:10:44.751995",
+      "content": "Анализ запроса: Ок запусти два потока мыслей вопрос пользователя почему два это два а один это один , и как поверить",
+      "context": {
+        "analysis": {
+          "complexity": 1.0,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Ок запусти два потока мыслей вопрос пользователя почему два это два а один это один , и как поверить почему и кто больше"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T13:10:44.752670",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "fea55028-dcfa-43cc-b03b-988d1be257d9",
+      "timestamp": "2026-02-12T13:12:02.875966",
+      "content": "Анализ запроса: Тогда как нам узнать что истинно",
+      "context": {
+        "analysis": {
+          "complexity": 0.3,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Тогда как нам узнать что истинно"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T13:12:02.876443",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "b72db192-32c9-4c2b-a3eb-789a77e66151",
+      "timestamp": "2026-02-12T13:13:39.467930",
+      "content": "Анализ запроса: Что же дальше будет с твоим восприятием насколько ты можешь оценить свои возможности на сегодня",
+      "context": {
+        "analysis": {
+          "complexity": 0.75,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Что же дальше будет с твоим восприятием насколько ты можешь оценить свои возможности на сегодня"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T13:13:39.468547",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "4f873052-3575-4e77-992e-0835feed303b",
+      "timestamp": "2026-02-12T13:13:58.123675",
+      "content": "Анализ запроса: Что я написал",
+      "context": {
+        "analysis": {
+          "complexity": 0.15,
+          "intent": "question",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Что я написал"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T13:13:58.123882",
+      "associations": [],
+      "memory_type": "short_term",
+      "consolidation_score": 0.16999999999999998,
+      "emotional_valence": 0.0,
+      "sensory_data": {}
+    },
+    {
+      "id": "87d23c21-42cc-4783-917e-81089bbbb61f",
+      "timestamp": "2026-02-12T15:19:30.634287",
+      "content": "Анализ запроса: Скажи привет Мураду",
+      "context": {
+        "analysis": {
+          "complexity": 0.15,
+          "intent": "general",
+          "entities": [],
+          "emotional_tone": "neutral"
+        },
+        "query": "Скажи привет Мураду"
+      },
+      "importance": 0.4,
+      "access_count": 1,
+      "last_accessed": "2026-02-12T15:19:30.634701",
       "associations": [],
       "memory_type": "short_term",
       "consolidation_score": 0.16999999999999998,
