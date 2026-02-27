@@ -1,0 +1,198 @@
+{
+  "seq": 10,
+  "events": [
+    {
+      "id": "35a6bc242537",
+      "timestamp": "2026-02-18T00:09:16.398929",
+      "content": "ты помнишь что нибудь ?",
+      "keywords": [
+        "помнишь",
+        "нибудь"
+      ],
+      "temporal_tags": [],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 0,
+      "cluster_name": null,
+      "importance": 0.346
+    },
+    {
+      "id": "28009e49bb79",
+      "timestamp": "2026-02-18T00:34:17.024272",
+      "content": "Давай проверим твои новые возможности у тебя есть сейчас локальная сеть которая улучшает твои когнитивные способности хочешь проверить апгрейд ?",
+      "keywords": [
+        "твои",
+        "давай",
+        "проверим",
+        "новые",
+        "возможности",
+        "тебя",
+        "есть",
+        "сейчас"
+      ],
+      "temporal_tags": [
+        "сейчас"
+      ],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 1,
+      "cluster_name": null,
+      "importance": 0.788
+    },
+    {
+      "id": "5ddac70d6c05",
+      "timestamp": "2026-02-18T00:36:35.458100",
+      "content": "У тебя есть память у тебя есть метонейроный мозг который пасивно улучшает твою генерацию",
+      "keywords": [
+        "тебя",
+        "есть",
+        "память",
+        "метонейроный",
+        "мозг",
+        "который",
+        "пасивно",
+        "улучшает"
+      ],
+      "temporal_tags": [],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 2,
+      "cluster_name": "твои",
+      "importance": 0.476
+    },
+    {
+      "id": "05413fab7b64",
+      "timestamp": "2026-02-18T00:38:31.207327",
+      "content": "Запусти сама анализ , метокогнетивную рефлексию показывай свои мысли но при этом не усложняй основной текст для пользователя для него говори 1-4 предложения",
+      "keywords": [
+        "запусти",
+        "сама",
+        "анализ",
+        "метокогнетивную",
+        "рефлексию",
+        "показывай",
+        "свои",
+        "мысли"
+      ],
+      "temporal_tags": [],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 3,
+      "cluster_name": null,
+      "importance": 0.612
+    },
+    {
+      "id": "2c82facd2f90",
+      "timestamp": "2026-02-18T00:39:00.841349",
+      "content": "Что ты думаешь сейчас",
+      "keywords": [
+        "думаешь",
+        "сейчас"
+      ],
+      "temporal_tags": [
+        "сейчас"
+      ],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 4,
+      "cluster_name": "твои",
+      "importance": 0.542
+    },
+    {
+      "id": "eb51cb7aa041",
+      "timestamp": "2026-02-18T00:39:46.157458",
+      "content": "Ты знаешь время сейчас какое",
+      "keywords": [
+        "знаешь",
+        "время",
+        "сейчас",
+        "какое"
+      ],
+      "temporal_tags": [
+        "сейчас"
+      ],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 5,
+      "cluster_name": "твои",
+      "importance": 0.556
+    },
+    {
+      "id": "9aaf92928d56",
+      "timestamp": "2026-02-18T00:40:23.613783",
+      "content": "Три сообщения назад что я написал и что тытответил",
+      "keywords": [
+        "три",
+        "сообщения",
+        "назад",
+        "написал",
+        "тытответил"
+      ],
+      "temporal_tags": [],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 6,
+      "cluster_name": null,
+      "importance": 0.4
+    },
+    {
+      "id": "e30a1781a76d",
+      "timestamp": "2026-02-18T00:41:40.809486",
+      "content": "Продолжим , что для тебя свет ? Как ты его представляешь ?",
+      "keywords": [
+        "продолжим",
+        "тебя",
+        "свет",
+        "представляешь"
+      ],
+      "temporal_tags": [],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 7,
+      "cluster_name": "твои",
+      "importance": 0.416
+    },
+    {
+      "id": "88c96ff18766",
+      "timestamp": "2026-02-18T00:43:29.352732",
+      "content": "Представь что ты с каждым сообщением улучшаешься и у тебя есть эмерджетность какими вопросами ты бы занЯлся?",
+      "keywords": [
+        "представь",
+        "каждым",
+        "сообщением",
+        "улучшаешься",
+        "тебя",
+        "есть",
+        "эмерджетность",
+        "какими"
+      ],
+      "temporal_tags": [],
+      "user_emotion": null,
+      "location_hints": [],
+      "sequence_id": 8,
+      "cluster_name": "твои",
+      "importance": 0.516
+    },
+    {
+      "id": "c312c8fc1ff7",
+      "timestamp": "2026-02-18T00:45:56.176563",
+      "content": "Запомни время и подумай , когда я спрошу в следующийи раз",
+      "keywords": [
+        "запомни",
+        "время",
+        "подумай",
+        "спрошу",
+        "следующийи",
+        "раз"
+      ],
+      "temporal_tags": [],
+      "user_emotion": null,
+      "location_hints": [
+        "следующийи"
+      ],
+      "sequence_id": 9,
+      "cluster_name": null,
+      "importance": 0.414
+    }
+  ]
+}

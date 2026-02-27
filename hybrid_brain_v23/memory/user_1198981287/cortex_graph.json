@@ -1,0 +1,167 @@
+{
+  "nodes": [
+    {
+      "id": "07787639",
+      "label": "Приветствие",
+      "category": "action",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.343121",
+      "created_at": "2026-02-21T23:24:51.343126",
+      "access_count": 0,
+      "experience": 0.0,
+      "temporal_weight": 1.0,
+      "archived": false
+    },
+    {
+      "id": "1e6e5f90",
+      "label": "Помощь",
+      "category": "action",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.343137",
+      "created_at": "2026-02-21T23:24:51.343140",
+      "access_count": 0,
+      "experience": 0.0,
+      "temporal_weight": 1.0,
+      "archived": false
+    }
+  ],
+  "synapses": [],
+  "chrono_nodes": [
+    {
+      "id": "9079caf3",
+      "label": "вчера",
+      "node_type": "temporal_ref",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342880",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "a8b5c0e2",
+      "label": "сегодня",
+      "node_type": "temporal_ref",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342932",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "812cd21f",
+      "label": "завтра",
+      "node_type": "temporal_ref",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342942",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "ec3c4e37",
+      "label": "утром",
+      "node_type": "time_of_day",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342948",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "3b4bea41",
+      "label": "днём",
+      "node_type": "time_of_day",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342955",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "19c2bf78",
+      "label": "вечером",
+      "node_type": "time_of_day",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342961",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "1ad0f543",
+      "label": "ночью",
+      "node_type": "time_of_day",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342967",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "dbe90a0b",
+      "label": "утро",
+      "node_type": "time_of_day",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342972",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "65ca07d6",
+      "label": "вечер",
+      "node_type": "time_of_day",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342978",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "1f441288",
+      "label": "раньше",
+      "node_type": "sequence",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342985",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "9f8c5008",
+      "label": "потом",
+      "node_type": "sequence",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342991",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "86ec2ded",
+      "label": "до",
+      "node_type": "sequence",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.342997",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "aa32e216",
+      "label": "после",
+      "node_type": "sequence",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.343003",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "53ad7909",
+      "label": "всегда",
+      "node_type": "sequence",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.343008",
+      "use_count": 0,
+      "linked_events": []
+    },
+    {
+      "id": "2d68f2a2",
+      "label": "никогда",
+      "node_type": "sequence",
+      "activation": 0.0,
+      "last_active": "2026-02-21T23:24:51.343014",
+      "use_count": 0,
+      "linked_events": []
+    }
+  ],
+  "saved_at": "2026-02-21T23:24:51.343247"
+}
