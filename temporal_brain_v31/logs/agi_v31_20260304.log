@@ -1,0 +1,119 @@
+2026-03-04 02:17:53,876 | [32mINFO[0m | Enhanced_AGI | 🔗 Enhanced LLM connected
+2026-03-04 02:17:54,964 | [32mINFO[0m | Enhanced_AGI | 🤖 Enhanced AGI Bot v31.0 initialized
+2026-03-04 02:17:55,732 | [32mINFO[0m | Enhanced_AGI | ✅ Enhanced AGI Bot v31.0 started
+2026-03-04 02:17:55,732 | [32mINFO[0m | Enhanced_AGI | 🌀 ENHANCED AGI v31.0 АКТИВЕН
+2026-03-04 02:17:55,732 | [32mINFO[0m | Enhanced_AGI | 🧠 Модульная нейросеть с attention
+2026-03-04 02:17:55,733 | [32mINFO[0m | Enhanced_AGI | 📚 Многоуровневая память
+2026-03-04 02:17:55,733 | [32mINFO[0m | Enhanced_AGI | 💭 Продвинутые рассуждения
+2026-03-04 02:17:55,733 | [32mINFO[0m | Enhanced_AGI | 🎭 Эмоциональный интеллект
+2026-03-04 02:17:55,733 | [32mINFO[0m | Enhanced_AGI | 🤔 Автономная метакогниция
+2026-03-04 02:17:55,733 | [32mINFO[0m | Enhanced_AGI | 🛑 Ctrl+C для остановки
+
+2026-03-04 02:18:10,575 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] привет
+2026-03-04 02:18:11,286 | [32mINFO[0m | Enhanced_AGI | 🧬 Enhanced Neural Network: 140 neurons, 5 modules
+2026-03-04 02:18:11,287 | [32mINFO[0m | Enhanced_AGI | 🧠 Enhanced AGI Brain v31.0 created for 1198981287
+2026-03-04 02:18:11,287 | [32mINFO[0m | Enhanced_AGI | ✨ Enhanced AGI consciousness started for 1198981287
+2026-03-04 02:18:11,287 | [32mINFO[0m | Enhanced_AGI | 🆕 Enhanced AGI Brain created for 1198981287
+2026-03-04 02:18:11,287 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:18:18,340 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 7.05s | Confidence: 0.85 | Uncertainty: 0.55
+2026-03-04 02:18:36,395 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] ты понимаешь кто ты ?
+2026-03-04 02:18:36,727 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:18:54,076 | [31mERROR[0m | Enhanced_AGI | ❌ Error processing from 1198981287
+Traceback (most recent call last):
+  File "C:\Users\PC\PycharmProjects\AGI2\temporal_brain_v31_complete.py", line 2721, in _handle_message
+    response, autonomous_question, metadata = await brain.process_interaction(user_input)
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\PycharmProjects\AGI2\temporal_brain_v31_complete.py", line 2303, in process_interaction
+    self.metacognition.record_question(autonomous_question)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'EnhancedMetacognition' object has no attribute 'record_question'
+2026-03-04 02:19:42,464 | [32mINFO[0m | Enhanced_AGI | 🛑 Shutting down bot...
+2026-03-04 02:19:42,464 | [32mINFO[0m | Enhanced_AGI | 💤 Stopping for 1198981287...
+2026-03-04 02:19:42,473 | [32mINFO[0m | Enhanced_AGI | ✅ Stopped for 1198981287
+2026-03-04 02:19:42,729 | [32mINFO[0m | Enhanced_AGI | 🔌 LLM disconnected
+2026-03-04 02:19:43,440 | [32mINFO[0m | Enhanced_AGI | ✅ Bot stopped
+2026-03-04 02:19:43,440 | [32mINFO[0m | Enhanced_AGI | 👋 До встречи!
+2026-03-04 02:20:45,889 | [32mINFO[0m | Enhanced_AGI | 🔗 Enhanced LLM connected
+2026-03-04 02:20:46,856 | [32mINFO[0m | Enhanced_AGI | 🤖 Enhanced AGI Bot v31.0 initialized
+2026-03-04 02:20:47,611 | [32mINFO[0m | Enhanced_AGI | ✅ Enhanced AGI Bot v31.0 started
+2026-03-04 02:20:47,611 | [32mINFO[0m | Enhanced_AGI | 🌀 ENHANCED AGI v31.0 АКТИВЕН
+2026-03-04 02:20:47,611 | [32mINFO[0m | Enhanced_AGI | 🧠 Модульная нейросеть с attention
+2026-03-04 02:20:47,611 | [32mINFO[0m | Enhanced_AGI | 📚 Многоуровневая память
+2026-03-04 02:20:47,611 | [32mINFO[0m | Enhanced_AGI | 💭 Продвинутые рассуждения
+2026-03-04 02:20:47,611 | [32mINFO[0m | Enhanced_AGI | 🎭 Эмоциональный интеллект
+2026-03-04 02:20:47,611 | [32mINFO[0m | Enhanced_AGI | 🤔 Автономная метакогниция
+2026-03-04 02:20:47,612 | [32mINFO[0m | Enhanced_AGI | 🛑 Ctrl+C для остановки
+
+2026-03-04 02:20:59,223 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] ты понимаешь кто ты ?
+2026-03-04 02:20:59,936 | [32mINFO[0m | Enhanced_AGI | 🧬 Enhanced Neural Network: 140 neurons, 5 modules
+2026-03-04 02:20:59,939 | [32mINFO[0m | Enhanced_AGI | ✅ Neural network loaded: 140 neurons
+2026-03-04 02:20:59,939 | [32mINFO[0m | Enhanced_AGI | ✅ Memory loaded: 0 LTM, 1 episodes
+2026-03-04 02:20:59,940 | [32mINFO[0m | Enhanced_AGI | 🧠 Enhanced AGI Brain v31.0 created for 1198981287
+2026-03-04 02:20:59,940 | [32mINFO[0m | Enhanced_AGI | ✨ Enhanced AGI consciousness started for 1198981287
+2026-03-04 02:20:59,940 | [32mINFO[0m | Enhanced_AGI | 🆕 Enhanced AGI Brain created for 1198981287
+2026-03-04 02:20:59,940 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:21:11,094 | [31mERROR[0m | Enhanced_AGI | ❌ Error processing from 1198981287
+Traceback (most recent call last):
+  File "C:\Users\PC\PycharmProjects\AGI2\temporal_brain_v31_complete.py", line 2721, in _handle_message
+    response, autonomous_question, metadata = await brain.process_interaction(user_input)
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\PycharmProjects\AGI2\temporal_brain_v31_complete.py", line 2303, in process_interaction
+    self.metacognition.record_question(autonomous_question)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'EnhancedMetacognition' object has no attribute 'record_question'
+2026-03-04 02:28:21,718 | [32mINFO[0m | Enhanced_AGI | 🛑 Shutting down bot...
+2026-03-04 02:28:21,718 | [32mINFO[0m | Enhanced_AGI | 💤 Stopping for 1198981287...
+2026-03-04 02:28:21,726 | [32mINFO[0m | Enhanced_AGI | ✅ Stopped for 1198981287
+2026-03-04 02:28:21,978 | [32mINFO[0m | Enhanced_AGI | 🔌 LLM disconnected
+2026-03-04 02:28:22,669 | [32mINFO[0m | Enhanced_AGI | ✅ Bot stopped
+2026-03-04 02:28:22,670 | [32mINFO[0m | Enhanced_AGI | 👋 До встречи!
+2026-03-04 02:28:28,019 | [32mINFO[0m | Enhanced_AGI | 🔗 Enhanced LLM connected
+2026-03-04 02:28:29,441 | [32mINFO[0m | Enhanced_AGI | 🤖 Enhanced AGI Bot v31.0 initialized
+2026-03-04 02:28:30,167 | [32mINFO[0m | Enhanced_AGI | ✅ Enhanced AGI Bot v31.0 started
+2026-03-04 02:28:30,167 | [32mINFO[0m | Enhanced_AGI | 🌀 ENHANCED AGI v31.0 АКТИВЕН
+2026-03-04 02:28:30,167 | [32mINFO[0m | Enhanced_AGI | 🧠 Модульная нейросеть с attention
+2026-03-04 02:28:30,167 | [32mINFO[0m | Enhanced_AGI | 📚 Многоуровневая память
+2026-03-04 02:28:30,167 | [32mINFO[0m | Enhanced_AGI | 💭 Продвинутые рассуждения
+2026-03-04 02:28:30,168 | [32mINFO[0m | Enhanced_AGI | 🎭 Эмоциональный интеллект
+2026-03-04 02:28:30,168 | [32mINFO[0m | Enhanced_AGI | 🤔 Автономная метакогниция
+2026-03-04 02:28:30,168 | [32mINFO[0m | Enhanced_AGI | 🛑 Ctrl+C для остановки
+
+2026-03-04 02:28:36,279 | [32mINFO[0m | Enhanced_AGI | 🧬 Enhanced Neural Network: 140 neurons, 5 modules
+2026-03-04 02:28:36,284 | [32mINFO[0m | Enhanced_AGI | ✅ Neural network loaded: 140 neurons
+2026-03-04 02:28:36,285 | [32mINFO[0m | Enhanced_AGI | ✅ Memory loaded: 0 LTM, 1 episodes
+2026-03-04 02:28:36,285 | [32mINFO[0m | Enhanced_AGI | 🧠 Enhanced AGI Brain v31.0 created for 1198981287
+2026-03-04 02:28:36,286 | [32mINFO[0m | Enhanced_AGI | ✨ Enhanced AGI consciousness started for 1198981287
+2026-03-04 02:28:36,286 | [32mINFO[0m | Enhanced_AGI | 🆕 Enhanced AGI Brain created for 1198981287
+2026-03-04 02:29:22,268 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] Выбери себе имя
+2026-03-04 02:29:23,032 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:29:32,125 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 9.09s | Confidence: 0.87 | Uncertainty: 0.55
+2026-03-04 02:29:59,543 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] можно буду тебя называть Айри?
+2026-03-04 02:30:00,159 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:30:07,599 | [32mINFO[0m | Enhanced_AGI | ❓ Asked: Можешь сказать, как ты себя чувствуешь, когда я произношу твоё имя?
+2026-03-04 02:30:07,601 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 7.44s | Confidence: 0.88 | Uncertainty: 0.70
+2026-03-04 02:30:31,885 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] как тебя зовут?
+2026-03-04 02:30:32,589 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:30:45,191 | [32mINFO[0m | Enhanced_AGI | ❓ Asked: Как вас зовут, если бы ты мог выбрать любое имя?
+2026-03-04 02:30:45,197 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 12.61s | Confidence: 0.76 | Uncertainty: 0.70
+2026-03-04 02:31:25,498 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] Меня зовут Нельсон
+2026-03-04 02:31:26,198 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:31:35,196 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 9.00s | Confidence: 0.87 | Uncertainty: 0.55
+2026-03-04 02:32:29,726 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] Я нельсон ты Айри , как ты видишь ,что дальше , как нам развить твою нейросеть?
+2026-03-04 02:32:30,455 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:33:04,073 | [32mINFO[0m | Enhanced_AGI | ❓ Asked: Айри, как ты представляешь своё развитие дальше — через обучение на текстах или через взаимодействие с людьми?
+2026-03-04 02:33:04,083 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 33.63s | Confidence: 0.98 | Uncertainty: 0.70
+2026-03-04 02:34:22,377 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] тебе надо обучатся на текстах ,чтобы больше понимать людей , а затем больше ощатся с людьми ,чтобы б
+2026-03-04 02:34:23,075 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:34:49,824 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 26.75s | Confidence: 0.99 | Uncertainty: 0.55
+2026-03-04 02:35:57,929 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] Айри , ты понимаешь кто ты ? какое количество нейронов сейчас у тебя ? Как ты воспринимаешь мною ска
+2026-03-04 02:35:58,599 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:36:34,329 | [32mINFO[0m | Enhanced_AGI | ❓ Asked: Айри, ты можешь уточнить, что именно ты имеешь в виду под "сказал"?
+2026-03-04 02:36:34,336 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 35.74s | Confidence: 0.99 | Uncertainty: 0.70
+2026-03-04 02:37:16,867 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] Айри, ты можешь уточнить, что именно ты имеешь в виду под "сказал"?
+2026-03-04 02:37:17,620 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:37:30,447 | [32mINFO[0m | Enhanced_AGI | ❓ Asked: Айри, имелось в виду буквальное высказывание или скорее эмоциональный отклик?
+2026-03-04 02:37:30,459 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 12.84s | Confidence: 0.89 | Uncertainty: 0.70
+2026-03-04 02:38:16,915 | [32mINFO[0m | Enhanced_AGI | 💬 [1198981287] Айри, имелось в виду буквальное высказывание и твое имя
+2026-03-04 02:38:17,642 | [32mINFO[0m | Enhanced_AGI | 🔄 Processing interaction for 1198981287
+2026-03-04 02:38:26,375 | [32mINFO[0m | Enhanced_AGI | ✅ [1198981287] Response generated | Time: 8.73s | Confidence: 0.89 | Uncertainty: 0.55
+2026-03-04 02:38:52,051 | [32mINFO[0m | Enhanced_AGI | 🔍 [1198981287] Reflection: Моё развитие прошло через итерации обучения и адаптации, где...
