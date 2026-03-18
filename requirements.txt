@@ -1,0 +1,59 @@
+# JAX Agent v3 - Requirements
+
+# ═══════════════════════════════════════════════════════════════
+# JAX (выберите одну версию в зависимости от вашей CUDA)
+# ═══════════════════════════════════════════════════════════════
+
+# Для CUDA 11.x (рекомендуется):
+# pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+# Для CUDA 12.x:
+# pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+# Для CPU (без GPU):
+# pip install --upgrade jax
+
+# ═══════════════════════════════════════════════════════════════
+# Flax - нейросети для JAX
+# ═══════════════════════════════════════════════════════════════
+
+
+# ═══════════════════════════════════════════════════════════════
+# Основные зависимости
+# ═══════════════════════════════════════════════════════════════
+numpy>=1.24.0
+scipy>=1.10.0
+aiohttp>=3.8.0
+python-telegram-bot>=20.0
+python-dotenv>=1.0.0
+
+# ═══════════════════════════════════════════════════════════════
+# BPE Tokenizer (опционально, но рекомендуется)
+# ═══════════════════════════════════════════════════════════════
+tokenizers>=0.15.0
+
+# ═══════════════════════════════════════════════════════════════
+# ИНСТРУКЦИИ ПО УСТАНОВКЕ
+# ═══════════════════════════════════════════════════════════════
+
+# 1. Создайте виртуальное окружение с Python 3.11:
+#    python -m venv venv_jax
+#    venv_jax\Scripts\activate  (Windows)
+#    source venv_jax/bin/activate  (Linux/Mac)
+
+# 2. Обновите pip:
+#    pip install --upgrade pip
+
+# 3. Установите JAX для GPU (CUDA 11.x):
+#    pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+# 4. Установите остальные зависимости:
+#    pip install flax numpy scipy aiohttp python-telegram-bot python-dotenv tokenizers
+
+# 5. Проверка:
+#    python -c "import jax; print(f'Backend: {jax.default_backend()}')"
+#    Должно вывести: Backend: gpu
+
+# ═══════════════════════════════════════════════════════════════
+# Полная инструкция: INSTALL_JAX.md
+# ═══════════════════════════════════════════════════════════════

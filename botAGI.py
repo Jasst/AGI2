@@ -20,7 +20,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from sentence_transformers import SentenceTransformer
 from pathlib import Path
 from collections import Counter, deque, defaultdict
 from datetime import datetime, timedelta, timezone
@@ -84,7 +83,7 @@ class UltimateCognitiveConfig:
     working_memory_size: int = 20
     memory_consolidation_threshold: float = 0.6
     forgetting_curve_factor: float = 0.15
-    embedding_dim: int = 384  # ✅ Увеличено с 128
+    embedding_dim: int = 256  # ✅ Увеличено с 128
 
     # 🎯 Обучение
     learning_rate: float = 3e-5
@@ -320,7 +319,7 @@ class MultiHeadAttention(nn.Module):
         self.scale = math.sqrt(self.d_k)
 
         # ✅ Добавляем relative positional bias
-        self.relative_attention_bias = nn.Embedding(33, n_heads)
+        self.relative_attention_bias = nn.Embedding(32, n_heads)
 
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         batch_size, seq_len = x.size(0), x.size(1)
@@ -1949,7 +1948,7 @@ class UltimateCognitiveAgent:
 
         # Токенизатор и модель
         self.tokenizer = SmartTokenizer(CONFIG.vocab_size)
-        self.embedder = SentenceTransformer('all-MiniLM-L6-v2')
+
         self.model = CognitiveTransformer(
             vocab_size=CONFIG.vocab_size,
             d_model=CONFIG.d_model,
@@ -2020,10 +2019,11 @@ class UltimateCognitiveAgent:
         logger.info(f"🚀 Ultimate Agent v37 created for {user_id}")
 
     def _simple_embed(self, text: str) -> np.ndarray:
-        # ✅ Sentence Transformer даёт 384-мерный вектор со смыслом
-        embedding = self.embedder.encode(text, convert_to_numpy=True)
-        # Нормализуем для косинусного сходства
-        return embedding / (np.linalg.norm(embedding) + 1e-8)
+        tokens = self.tokenizer.encode(text, max_length=CONFIG.embedding_dim)
+        emb = np.zeros(CONFIG.embedding_dim)
+        for i, t in enumerate(tokens[:CONFIG.embedding_dim]):
+            emb[i] = t / CONFIG.vocab_size
+        return emb / (np.linalg.norm(emb) + 1e-8)
 
     def _load_state(self):
         model_path = self.user_dir / 'transformer.pt'

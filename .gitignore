@@ -2,3 +2,13 @@
 .env
 .env
 .env
+ultimate_agi_v36/models/1198981287/transformer.pt
+ultimate_agi_v36/models/1198981287/tokenizer.pkl.gz
+ultimate_agi_v37 — копия/models/1198981287/tokenizer.pkl.gz
+*.log
+*.gz
+*.gz
+*.gz
+*.pt
+*.gz
+*.gz
