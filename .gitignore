@@ -12,3 +12,4 @@ ultimate_agi_v37 — копия/models/1198981287/tokenizer.pkl.gz
 *.pt
 *.gz
 *.gz
+auth.py

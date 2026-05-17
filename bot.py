@@ -1,161 +1,187 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🧠 HYBRID COGNITIVE AGI v4.3 — ЛОКАЛЬНАЯ ВЕРСИЯ С GUI (PyQt6)
+🚀 ADVANCED AUTONOMOUS LEARNING AGENT v3.0 — Веб-версия для blockcoin.ru
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Фоновая петля мышления
-✅ Проверка истинности (Truthfulness)
-✅ Интенциональность (psi-уровень)
-✅ Самомодификация с песочницей
-✅ Полностью локальный чат
-✅ ИСПРАВЛЕНО: таймауты, логика подключений, обработка ответов
-✅ 🔧 FIX: WindowsSelectorEventLoopPolicy для совместимости aiohttp
+Работает через:
+• FastAPI + WebSockets (асинхронный веб-сервер)
+• Uvicorn (запуск)
+• HTML/CSS/JS интерфейс (встроенный)
 """
 
-# 🔧 🔥 КРИТИЧЕСКИЙ ФИКС ДЛЯ WINDOWS 🔥
-# Должен быть ДО всех импортов asyncio/aiohttp!
-import sys
-import asyncio
-if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-# ──────────────────────────────────────────────────────────────
-# 📦 ИМПОРТЫ
-# ──────────────────────────────────────────────────────────────
 import os
+import sys
 import json
+import asyncio
 import logging
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
-from collections import deque, defaultdict
-from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Any, Callable
-from dataclasses import dataclass, field
-import pickle
+from collections import deque, defaultdict, Counter
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple, Any, Set
+from dataclasses import dataclass, field, asdict
 import gzip
+import pickle
 import time
 import re
-import hashlib
-import importlib.util
-import traceback
-import ast
-import socket
-import warnings
 from dotenv import load_dotenv
 
-# 🔥 КРИТИЧЕСКИ ВАЖНО: aiohttp должен быть импортирован!
-import aiohttp
+# Веб-сервер
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
-# PyQt6
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QTextEdit, QLineEdit, QPushButton, QLabel, QTabWidget, QPlainTextEdit,
-    QProgressBar
-)
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer, Qt, QThread
-from PyQt6.QtGui import QFont, QTextCursor
-import qasync
+# Для RAG
+try:
+    import chromadb
+    from chromadb.config import Settings
 
-from sympy import false
+    CHROMADB_AVAILABLE = True
+except ImportError:
+    CHROMADB_AVAILABLE = False
+    print("⚠️ ChromaDB not available. Install: pip install chromadb")
+
+# Для BPE токенизации
+try:
+    from tokenizers import Tokenizer
+    from tokenizers.models import BPE
+    from tokenizers.trainers import BpeTrainer
+    from tokenizers.pre_tokenizers import ByteLevel
+    from tokenizers.processors import TemplateProcessing
+
+    TOKENIZERS_AVAILABLE = True
+except ImportError:
+    TOKENIZERS_AVAILABLE = False
+    print("⚠️ Tokenizers not available. Install: pip install tokenizers")
 
 load_dotenv()
-warnings.filterwarnings("ignore", message=".*pynvml.*deprecated.*", category=FutureWarning)
 
 
-# ──────────────────────────────────────────────────────────────
-# ⚙️ КОНФИГУРАЦИЯ (исправленная)
-# ──────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# ⚙️ ADVANCED CONFIGURATION
+# ══════════════════════════════════════════════════════════════
+
 @dataclass
-class HybridConfig:
-    # API
+class AdvancedConfig:
+    """Продвинутая конфигурация v3"""
+    # LM Studio API (остается)
     lm_studio_url: str = os.getenv('LM_STUDIO_API_URL', 'http://localhost:1234/v1/chat/completions')
     lm_studio_key: str = os.getenv('LM_STUDIO_API_KEY', 'lm-studio')
-    debug_mode: bool = os.getenv('DEBUG_MODE', 'false').lower() == 'true'
 
-    # 🔧 ИСПРАВЛЕНИЕ: Раздельные таймауты для разных этапов
-    lm_studio_timeout_total: int = int(os.getenv('LM_TIMEOUT_TOTAL', '300'))  # 5 мин - общая
-    lm_studio_timeout_connect: int = int(os.getenv('LM_TIMEOUT_CONNECT', '30'))  # 30 сек - подключение
-    lm_studio_timeout_read: int = int(os.getenv('LM_TIMEOUT_READ', '180'))  # 3 мин - чтение ответа
+    # Веб-сервер
+    host: str = "0.0.0.0"
+    port: int = 8000
+    websocket_path: str = "/ws"
 
-    max_retries: int = 3
-    retry_delay_base: float = 2.0  # база для экспоненциальной задержки
-
-    # Модель Transformer
+    # Student Model - МАКСИМАЛЬНАЯ версия
     vocab_size: int = 50000
-    d_model: int = 512
-    n_heads: int = 8
-    n_layers: int = 6
-    d_ff: int = 2048
-    max_seq_length: int = 512
+    d_model: int = 1024
+    n_heads: int = 16
+    n_layers: int = 12
+    d_ff: int = 4096
+    max_seq_length: int = 1024
     dropout: float = 0.1
-    device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
-    mixed_precision: bool = torch.cuda.is_available()
 
-    # Память
-    episodic_memory_size: int = 5000
-    semantic_memory_size: int = 2000
-    working_memory_size: int = 15
-    embedding_dim: int = 384
+    # Автоматическая адаптация под GPU
+    auto_scale_model: bool = True
+    max_gpu_memory_gb: float = 8.0
 
     # Обучение
     learning_rate: float = 5e-5
+    meta_learning_rate: float = 1e-4
+    batch_size: int = 8
+    gradient_accumulation_steps: int = 4
+    distillation_temperature: float = 2.0
+    distillation_alpha: float = 0.7
+
+    # Meta-Learning
+    meta_learning_enabled: bool = True
+    few_shot_examples: int = 5
+    meta_batch_size: int = 4
+    inner_loop_steps: int = 3
+
+    # RAG
+    rag_enabled: bool = CHROMADB_AVAILABLE
+    rag_top_k: int = 5
+    rag_chunk_size: int = 512
+    rag_embedding_dim: int = 768
+
+    # Внутреннее время
+    temporal_embeddings: bool = True
+    time_embedding_dim: int = 64
+    circadian_cycle_hours: int = 24
+    memory_decay_rate: float = 0.01
+
+    # Автономность
+    initial_teacher_usage: float = 1.0
+    min_teacher_usage: float = 0.05
+    autonomy_growth_rate: float = 0.002
+    confidence_threshold: float = 0.75
+
+    # Память
+    replay_buffer_size: int = 50000
     training_frequency: int = 5
     save_frequency: int = 50
 
-    # Самомодификация
-    self_modification_enabled: bool = True
-    module_creation_threshold: float = 0.6
-    max_custom_modules: int = 20
-
-    # Соматосенсорика
-    internal_monitoring_enabled: bool = True
-
     # Пути
-    version: str = "4.3-LOCAL-FIXED"
-    base_dir: Path = Path(os.getenv('BASE_DIR', 'hybrid_agi_v4'))
+    base_dir: Path = Path('advanced_agent_v3')
+    device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
+    mixed_precision: bool = torch.cuda.is_available()
 
     def __post_init__(self):
-        subdirs = ['models', 'memory', 'logs', 'modules/custom', 'tokenizer']
-        for subdir in subdirs:
+        for subdir in ['models', 'memory', 'logs', 'checkpoints', 'rag', 'tokenizer']:
             (self.base_dir / subdir).mkdir(parents=True, exist_ok=True)
 
-    def get_aiohttp_timeout(self) -> aiohttp.ClientTimeout:
-        """🔧 Возвращает корректный таймаут для aiohttp"""
-        return aiohttp.ClientTimeout(
-            total=self.lm_studio_timeout_total,
-            connect=self.lm_studio_timeout_connect,
-            sock_read=self.lm_studio_timeout_read
-        )
+        if self.auto_scale_model and self.device == 'cuda':
+            self._auto_scale_to_gpu()
+
+    def _auto_scale_to_gpu(self):
+        """Автоматическая адаптация размера модели под GPU"""
+        try:
+            gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
+            print(f"🎮 GPU Memory: {gpu_memory_gb:.2f} GB")
+
+            estimated_params = (
+                    self.vocab_size * self.d_model * 2 +
+                    self.n_layers * (4 * self.d_model * self.d_model + 2 * self.d_model * self.d_ff)
+            )
+            estimated_memory_gb = estimated_params * 4 / 1e9 * 1.5
+
+            if estimated_memory_gb > gpu_memory_gb * 0.7:
+                scale_factor = (gpu_memory_gb * 0.7) / estimated_memory_gb
+                self.d_model = int(self.d_model * scale_factor ** 0.5)
+                self.d_ff = int(self.d_ff * scale_factor ** 0.5)
+                self.n_layers = max(6, int(self.n_layers * scale_factor ** 0.25))
+                self.d_model = (self.d_model // self.n_heads) * self.n_heads
+                print(f"⚙️ Auto-scaled: d_model={self.d_model}, n_layers={self.n_layers}, d_ff={self.d_ff}")
+
+        except Exception as e:
+            print(f"⚠️ Auto-scaling failed: {e}")
 
 
-CONFIG = HybridConfig()
+CONFIG = AdvancedConfig()
 
 
-# ──────────────────────────────────────────────────────────────
-# 📊 LOGGING (улучшенный)
-# ──────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# 📊 LOGGING
+# ══════════════════════════════════════════════════════════════
+
 def setup_logging() -> logging.Logger:
-    logger = logging.getLogger('Hybrid_AGI_Local')
-    logger.setLevel(logging.DEBUG if CONFIG.debug_mode else logging.INFO)
+    logger = logging.getLogger('AdvancedAgent_v3')
+    logger.setLevel(logging.INFO)
     logger.handlers.clear()
 
-    # Консоль с цветами (упрощённо)
     console = logging.StreamHandler(sys.stdout)
-    console.setFormatter(logging.Formatter(
-        '%(asctime)s | %(levelname)-8s | %(message)s',
-        datefmt='%H:%M:%S'
-    ))
+    console.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s', datefmt='%H:%M:%S'))
 
-    # Файл
-    log_file = CONFIG.base_dir / 'logs' / f'agi_{datetime.now():%Y%m%d}.log'
-    log_file.parent.mkdir(exist_ok=True)
-    file_handler = logging.FileHandler(log_file, encoding='utf-8', mode='a')
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(message)s'
-    ))
+    log_file = CONFIG.base_dir / 'logs' / f'agent_v3_{datetime.now():%Y%m%d}.log'
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s'))
 
     logger.addHandler(console)
     logger.addHandler(file_handler)
@@ -165,23 +191,48 @@ def setup_logging() -> logging.Logger:
 logger = setup_logging()
 
 
-# ──────────────────────────────────────────────────────────────
-# 🔤 BPE TOKENIZER (без изменений)
-# ──────────────────────────────────────────────────────────────
-class HybridBPETokenizer:
+# ══════════════════════════════════════════════════════════════
+# 🔤 ADVANCED BPE TOKENIZER (сокращен для краткости, но полный функционал)
+# ══════════════════════════════════════════════════════════════
+
+class AdvancedBPETokenizer:
     def __init__(self, vocab_size: int = 50000):
         self.vocab_size = vocab_size
+        self.tokenizer: Optional[Tokenizer] = None
         self.special_tokens = {'<PAD>': 0, '<UNK>': 1, '<BOS>': 2, '<EOS>': 3}
+        if TOKENIZERS_AVAILABLE:
+            self._init_bpe_tokenizer()
+        else:
+            self._init_fallback_tokenizer()
+
+    def _init_bpe_tokenizer(self):
+        self.tokenizer = Tokenizer(BPE(unk_token="<UNK>"))
+        self.tokenizer.add_special_tokens(list(self.special_tokens.keys()))
+        self.tokenizer.pre_tokenizer = ByteLevel(add_prefix_space=False)
+        self.tokenizer.post_processor = TemplateProcessing(
+            single="<BOS> $A <EOS>",
+            special_tokens=[("<BOS>", self.special_tokens['<BOS>']), ("<EOS>", self.special_tokens['<EOS>'])]
+        )
+
+    def _init_fallback_tokenizer(self):
         self.word_to_id = self.special_tokens.copy()
         self.id_to_word = {v: k for k, v in self.special_tokens.items()}
         self.next_id = len(self.special_tokens)
 
     def encode(self, text: str, max_length: Optional[int] = None) -> List[int]:
-        words = text.lower().split()
-        tokens = [self.special_tokens['<BOS>']]
-        for word in words:
-            tokens.append(self.word_to_id.get(word, self.special_tokens['<UNK>']))
-        tokens.append(self.special_tokens['<EOS>'])
+        if TOKENIZERS_AVAILABLE and self.tokenizer:
+            try:
+                encoding = self.tokenizer.encode(text)
+                tokens = encoding.ids
+            except:
+                words = text.lower().split()
+                tokens = [self.special_tokens['<BOS>']] + [self.special_tokens.get('<UNK>', 1)] * len(words) + [
+                    self.special_tokens['<EOS>']]
+        else:
+            words = text.lower().split()
+            tokens = [self.special_tokens['<BOS>']] + [self.word_to_id.get(w, self.special_tokens['<UNK>']) for w in
+                                                       words] + [self.special_tokens['<EOS>']]
+
         if max_length:
             if len(tokens) > max_length:
                 tokens = tokens[:max_length]
@@ -190,88 +241,131 @@ class HybridBPETokenizer:
         return tokens
 
     def decode(self, tokens: List[int], skip_special: bool = True) -> str:
-        words = []
-        for t in tokens:
-            if skip_special and t in self.special_tokens.values():
-                continue
-            words.append(self.id_to_word.get(t, '<UNK>'))
-        return ' '.join(words)
+        if TOKENIZERS_AVAILABLE and self.tokenizer:
+            if skip_special:
+                tokens = [t for t in tokens if t >= len(self.special_tokens)]
+            return self.tokenizer.decode(tokens, skip_special_tokens=skip_special)
+        else:
+            words = []
+            for t in tokens:
+                w = self.id_to_word.get(t, '<UNK>')
+                if not skip_special or w not in self.special_tokens:
+                    words.append(w)
+            return ' '.join(words)
 
     def save(self, path: Path):
-        path.mkdir(parents=True, exist_ok=True)
-        with gzip.open(path / 'tokenizer.pkl.gz', 'wb') as f:
-            pickle.dump({'word_to_id': self.word_to_id, 'id_to_word': self.id_to_word}, f)
+        if TOKENIZERS_AVAILABLE and self.tokenizer:
+            self.tokenizer.save(str(path / 'tokenizer.json'))
+        else:
+            with gzip.open(path / 'tokenizer_fallback.pkl.gz', 'wb') as f:
+                pickle.dump({'word_to_id': self.word_to_id, 'id_to_word': self.id_to_word, 'next_id': self.next_id}, f)
 
     def load(self, path: Path) -> bool:
-        p = path / 'tokenizer.pkl.gz'
-        if p.exists():
-            try:
-                with gzip.open(p, 'rb') as f:
-                    state = pickle.load(f)
-                    self.word_to_id = state['word_to_id']
-                    self.id_to_word = state['id_to_word']
-                return True
-            except Exception as e:
-                logger.error(f"Ошибка загрузки токенизатора: {e}")
+        if (path / 'tokenizer.json').exists() and TOKENIZERS_AVAILABLE:
+            self.tokenizer = Tokenizer.from_file(str(path / 'tokenizer.json'))
+            return True
+        elif (path / 'tokenizer_fallback.pkl.gz').exists():
+            with gzip.open(path / 'tokenizer_fallback.pkl.gz', 'rb') as f:
+                state = pickle.load(f)
+            self.word_to_id, self.id_to_word, self.next_id = state['word_to_id'], state['id_to_word'], state['next_id']
+            return True
         return False
 
 
-# ──────────────────────────────────────────────────────────────
-# 🧠 TRANSFORMER (без изменений)
-# ──────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════
+# ⏰ TEMPORAL EMBEDDINGS
+# ══════════════════════════════════════════════════════════════
+
+class TemporalEmbeddings(nn.Module):
+    def __init__(self, time_dim: int = 64):
+        super().__init__()
+        self.time_dim = time_dim
+        self.time_scale = 10000.0
+        self.circadian_embedding = nn.Embedding(24, time_dim)
+        self.weekday_embedding = nn.Embedding(7, time_dim)
+        self.month_embedding = nn.Embedding(12, time_dim)
+        self.register_buffer('birth_timestamp', torch.tensor(time.time()))
+
+    def get_current_time_features(self) -> Dict[str, int]:
+        now = datetime.now()
+        return {'hour': now.hour, 'weekday': now.weekday(), 'month': now.month - 1,
+                'seconds_since_birth': int(time.time() - self.birth_timestamp.item())}
+
+    def forward(self, batch_size: int = 1) -> torch.Tensor:
+        features = self.get_current_time_features()
+        device = next(self.parameters()).device
+        hour_emb = self.circadian_embedding(torch.tensor([features['hour']], device=device)).expand(batch_size, -1)
+        weekday_emb = self.weekday_embedding(torch.tensor([features['weekday']], device=device)).expand(batch_size, -1)
+        month_emb = self.month_embedding(torch.tensor([features['month']], device=device)).expand(batch_size, -1)
+        seconds = features['seconds_since_birth']
+        position = torch.arange(self.time_dim, device=device).float()
+        div_term = torch.exp(position * -(np.log(self.time_scale) / self.time_dim))
+        continuous_emb = torch.zeros(batch_size, self.time_dim, device=device)
+        continuous_emb[:, 0::2] = torch.sin(seconds * div_term[0::2])
+        continuous_emb[:, 1::2] = torch.cos(seconds * div_term[1::2])
+        return hour_emb + weekday_emb + month_emb + continuous_emb
+
+
+# ══════════════════════════════════════════════════════════════
+# 🧠 TRANSFORMER MODELS (сокращены, но полные)
+# ══════════════════════════════════════════════════════════════
+
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, dropout: float = 0.1):
         super().__init__()
         assert d_model % n_heads == 0
-        self.d_k = d_model // n_heads
-        self.W_q = nn.Linear(d_model, d_model)
-        self.W_k = nn.Linear(d_model, d_model)
-        self.W_v = nn.Linear(d_model, d_model)
-        self.W_o = nn.Linear(d_model, d_model)
-        self.dropout = nn.Dropout(dropout)
-        self.n_heads = n_heads
-        self.d_model = d_model
+        self.d_model, self.n_heads, self.d_k = d_model, n_heads, d_model // n_heads
+        self.W_q, self.W_k, self.W_v, self.W_o = nn.Linear(d_model, d_model), nn.Linear(d_model, d_model), nn.Linear(
+            d_model, d_model), nn.Linear(d_model, d_model)
+        self.dropout, self.scale = nn.Dropout(dropout), np.sqrt(self.d_k)
 
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
-        batch_size = x.size(0)
-        Q = self.W_q(x).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
-        K = self.W_k(x).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
-        V = self.W_v(x).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
-        scores = torch.matmul(Q, K.transpose(-2, -1)) / np.sqrt(self.d_k)
+        B = x.size(0)
+        Q = self.W_q(x).view(B, -1, self.n_heads, self.d_k).transpose(1, 2)
+        K = self.W_k(x).view(B, -1, self.n_heads, self.d_k).transpose(1, 2)
+        V = self.W_v(x).view(B, -1, self.n_heads, self.d_k).transpose(1, 2)
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / self.scale
         if mask is not None:
             scores = scores.masked_fill(mask == 0, -1e9)
-        attention = F.softmax(scores, dim=-1)
-        context = torch.matmul(self.dropout(attention), V)
-        context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
+        attn = self.dropout(F.softmax(scores, dim=-1))
+        context = torch.matmul(attn, V).transpose(1, 2).contiguous().view(B, -1, self.d_model)
         return self.W_o(context)
+
+
+class FeedForward(nn.Module):
+    def __init__(self, d_model: int, d_ff: int, dropout: float = 0.1):
+        super().__init__()
+        self.linear1, self.linear2, self.dropout = nn.Linear(d_model, d_ff), nn.Linear(d_ff, d_model), nn.Dropout(
+            dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.linear2(self.dropout(F.gelu(self.linear1(x))))
 
 
 class TransformerBlock(nn.Module):
     def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float = 0.1):
         super().__init__()
-        self.attention = MultiHeadAttention(d_model, n_heads, dropout)
-        self.feed_forward = nn.Sequential(nn.Linear(d_model, d_ff), nn.GELU(), nn.Linear(d_ff, d_model))
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.dropout = nn.Dropout(dropout)
+        self.attn, self.ff = MultiHeadAttention(d_model, n_heads, dropout), FeedForward(d_model, d_ff, dropout)
+        self.norm1, self.norm2, self.dropout1, self.dropout2 = nn.LayerNorm(d_model), nn.LayerNorm(d_model), nn.Dropout(
+            dropout), nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
-        x = x + self.dropout(self.attention(self.norm1(x), mask))
-        x = x + self.dropout(self.feed_forward(self.norm2(x)))
-        return x
+        x = x + self.dropout1(self.attn(self.norm1(x), mask))
+        return x + self.dropout2(self.ff(self.norm2(x)))
 
 
-class HybridTransformer(nn.Module):
-    def __init__(self, vocab_size: int, d_model: int, n_heads: int, n_layers: int,
-                 d_ff: int, max_seq: int, dropout: float):
+class AdvancedStudentTransformer(nn.Module):
+    def __init__(self, vocab_size: int, d_model: int = 1024, n_heads: int = 16, n_layers: int = 12, d_ff: int = 4096,
+                 max_seq_length: int = 1024, dropout: float = 0.1, use_temporal: bool = True, time_dim: int = 64):
         super().__init__()
-        self.token_embedding = nn.Embedding(vocab_size, d_model)
-        self.position_embedding = nn.Embedding(max_seq, d_model)
-        self.blocks = nn.ModuleList([
-            TransformerBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_layers)
-        ])
-        self.norm = nn.LayerNorm(d_model)
-        self.output_projection = nn.Linear(d_model, vocab_size)
+        self.d_model, self.vocab_size, self.use_temporal = d_model, vocab_size, use_temporal
+        self.token_embedding, self.position_embedding = nn.Embedding(vocab_size, d_model), nn.Embedding(max_seq_length,
+                                                                                                        d_model)
+        if use_temporal:
+            self.temporal_embeddings, self.temporal_projection = TemporalEmbeddings(time_dim), nn.Linear(time_dim,
+                                                                                                         d_model)
+        self.blocks = nn.ModuleList([TransformerBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_layers)])
+        self.norm, self.output_projection = nn.LayerNorm(d_model), nn.Linear(d_model, vocab_size)
         self.output_projection.weight = self.token_embedding.weight
         self._init_weights()
 
@@ -280,25 +374,39 @@ class HybridTransformer(nn.Module):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
-    def forward(self, input_ids: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
-        batch_size, seq_length = input_ids.size()
+    def forward(self, input_ids: torch.Tensor, mask: Optional[torch.Tensor] = None,
+                return_logits: bool = True) -> torch.Tensor:
+        B, L = input_ids.size()
+        device = input_ids.device
         x = self.token_embedding(input_ids) + self.position_embedding(
-            torch.arange(seq_length, device=input_ids.device)
-        )
+            torch.arange(L, device=device).unsqueeze(0).expand(B, -1))
+        if self.use_temporal:
+            x = x + self.temporal_projection(self.temporal_embeddings(B).unsqueeze(1))
         for block in self.blocks:
             x = block(x, mask)
-        return self.output_projection(self.norm(x))
+        logits = self.output_projection(self.norm(x))
+        return logits if return_logits else F.softmax(logits, dim=-1)
 
-    def generate(self, prompt_ids: torch.Tensor, max_length: int = 50,
-                 temperature: float = 0.8, eos_token_id: int = 3) -> Tuple[torch.Tensor, float]:
+    def generate(self, prompt_ids: torch.Tensor, max_length: int = 100, temperature: float = 1.0, top_k: int = 50,
+                 top_p: float = 0.9, eos_token_id: int = 3) -> Tuple[torch.Tensor, float]:
         self.eval()
-        generated = prompt_ids.clone()
-        confidences = []
+        generated, confidences = prompt_ids.clone(), []
         with torch.no_grad():
             for _ in range(max_length):
-                logits = self.forward(generated)[:, -1, :] / temperature
-                probs = F.softmax(logits, dim=-1)
-                next_token = torch.multinomial(probs, 1)
+                logits = self.forward(generated, return_logits=True)
+                next_logits = logits[:, -1, :] / temperature
+                if top_k > 0:
+                    next_logits[next_logits < torch.topk(next_logits, top_k)[0][..., -1, None]] = -float('Inf')
+                if top_p < 1.0:
+                    sorted_logits, sorted_indices = torch.sort(next_logits, descending=True)
+                    cum_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+                    sorted_indices_to_remove = cum_probs > top_p
+                    sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+                    sorted_indices_to_remove[..., 0] = 0
+                    next_logits[sorted_indices_to_remove.scatter(1, sorted_indices, sorted_indices_to_remove)] = -float(
+                        'Inf')
+                probs = F.softmax(next_logits, dim=-1)
+                next_token = torch.multinomial(probs, num_samples=1)
                 confidences.append(probs.max().item())
                 generated = torch.cat([generated, next_token], dim=1)
                 if next_token.item() == eos_token_id:
@@ -306,1015 +414,760 @@ class HybridTransformer(nn.Module):
         return generated, np.mean(confidences) if confidences else 0.0
 
 
-# ──────────────────────────────────────────────────────────────
-# 📚 COGNITIVE MEMORY (без изменений)
-# ──────────────────────────────────────────────────────────────
-@dataclass
-class EpisodicMemory:
-    content: str
-    timestamp: float
-    importance: float = 0.5
-    emotional_valence: float = 0.0
-    embedding: np.ndarray = field(default_factory=lambda: np.zeros(CONFIG.embedding_dim))
+# ══════════════════════════════════════════════════════════════
+# 👨‍🏫 TEACHER MODEL
+# ══════════════════════════════════════════════════════════════
 
-
-class CognitiveMemorySystem:
-    def __init__(self, embed_func: Callable[[str], np.ndarray]):
-        self.embed_func = embed_func
-        self.episodic: List[EpisodicMemory] = []
-        self.semantic: Dict[str, str] = {}
-        self.procedural: Dict[str, str] = {}
-        self.working_memory: deque = deque(maxlen=CONFIG.working_memory_size)
-
-    def add_episode(self, content: str, importance: float, emotional_valence: float):
-        try:
-            emb = self.embed_func(content)
-            self.episodic.append(EpisodicMemory(
-                content=content, timestamp=time.time(),
-                importance=importance, emotional_valence=emotional_valence, embedding=emb
-            ))
-            self.working_memory.append(content)
-            if len(self.episodic) > CONFIG.episodic_memory_size:
-                self.episodic.sort(key=lambda x: x.importance, reverse=True)
-                self.episodic = self.episodic[:CONFIG.episodic_memory_size]
-        except Exception as e:
-            logger.error(f"Ошибка добавления эпизода: {e}")
-
-    def add_concept(self, concept: str, definition: str):
-        self.semantic[concept] = definition
-
-    def get_context(self, query: str, top_k: int = 3) -> str:
-        if not self.episodic:
-            return ""
-        try:
-            query_emb = self.embed_func(query)
-            scored = []
-            for mem in self.episodic:
-                norm_q = np.linalg.norm(query_emb)
-                norm_m = np.linalg.norm(mem.embedding)
-                if norm_q * norm_m > 1e-8:
-                    sim = np.dot(mem.embedding, query_emb) / (norm_q * norm_m)
-                    scored.append((mem, sim))
-            scored.sort(key=lambda x: x[1], reverse=True)
-            context = "=== Memory ===\n"
-            for mem, score in scored[:top_k]:
-                if score > 0.3:
-                    context += f"[{score:.2f}] {mem.content}\n"
-            return context if len(context) > 15 else ""
-        except Exception as e:
-            logger.warning(f"Ошибка получения контекста: {e}")
-            return ""
-
-    def save(self, path: Path):
-        try:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with gzip.open(path, 'wb') as f:
-                pickle.dump({
-                    'episodic': self.episodic,
-                    'semantic': self.semantic,
-                    'procedural': self.procedural
-                }, f)
-        except Exception as e:
-            logger.error(f"Ошибка сохранения памяти: {e}")
-
-    def load(self, path: Path) -> bool:
-        if not path.exists():
-            return False
-        try:
-            with gzip.open(path, 'rb') as f:
-                state = pickle.load(f)
-                self.episodic = state.get('episodic', [])
-                self.semantic = state.get('semantic', {})
-                self.procedural = state.get('procedural', {})
-            return True
-        except Exception as e:
-            logger.error(f"Ошибка загрузки памяти: {e}")
-            return False
-
-
-# ──────────────────────────────────────────────────────────────
-# 🌡️ SOMATOSENSORY SYSTEM (без изменений)
-# ──────────────────────────────────────────────────────────────
-class SomatosensorySystem:
-    def __init__(self):
-        self.state_history: deque = deque(maxlen=50)
-        self.current_quality = 0.5
-        self.emotional_valence = 0.0
-        self.psi_level = 0.5
-        self.last_action_time = time.time()
-
-    def update(self, quality: float, emotion: float):
-        self.current_quality = self.current_quality * 0.8 + quality * 0.2
-        self.emotional_valence = self.emotional_valence * 0.9 + emotion * 0.1
-        self.state_history.append({'q': quality, 't': time.time()})
-        novelty = 1.0 - quality
-        self._update_psi(novelty, quality)
-
-    def _update_psi(self, novelty: float, success: float):
-        time_since = time.time() - self.last_action_time
-        time_factor = 1.0 - np.exp(-time_since / 60.0)
-        self.psi_level = np.clip(
-            self.psi_level + 0.1 * novelty - 0.05 * (1.0 - success) + 0.05 * time_factor,
-            0.1, 1.0
-        )
-        self.last_action_time = time.time()
-
-    def should_initiate_action(self) -> bool:
-        return np.random.random() < self.psi_level
-
-    def get_state(self) -> str:
-        if self.current_quality > 0.7:
-            return "Уверенное"
-        if self.current_quality < 0.3:
-            return "Неопределенное"
-        return "Нормальное"
-
-
-# ──────────────────────────────────────────────────────────────
-# 🔧 SELF-MODIFICATION (улучшенная проверка безопасности)
-# ──────────────────────────────────────────────────────────────
-class SelfModificationEngine:
-    FORBIDDEN_MODULES = {
-        'os', 'subprocess', 'sys', 'shutil', 'importlib',
-        'eval', 'exec', 'compile', '__import__', 'pty', 'socket'
-    }
-    FORBIDDEN_FUNCTIONS = {'eval', 'exec', 'compile', '__import__', 'open'}
-
-    def __init__(self, llm_client, modules_dir: Path):
-        self.llm = llm_client
-        self.modules_dir = modules_dir
-        self.modules_dir.mkdir(parents=True, exist_ok=True)
-        self.loaded_modules: Dict[str, Any] = {}
-
-    def _is_safe_code(self, code: str) -> bool:
-        try:
-            tree = ast.parse(code)
-        except SyntaxError as e:
-            logger.warning(f"Синтаксическая ошибка в коде: {e}")
-            return False
-
-        for node in ast.walk(tree):
-            # Проверка импортов
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    if alias.name.split('.')[0] in self.FORBIDDEN_MODULES:
-                        logger.warning(f"Запрещённый модуль: {alias.name}")
-                        return False
-            elif isinstance(node, ast.ImportFrom):
-                if node.module and node.module.split('.')[0] in self.FORBIDDEN_MODULES:
-                    logger.warning(f"Запрещённый модуль: {node.module}")
-                    return False
-            # Проверка вызовов функций
-            elif isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Name) and node.func.id in self.FORBIDDEN_FUNCTIONS:
-                    logger.warning(f"Запрещённая функция: {node.func.id}")
-                    return False
-                # Проверка getattr(object, '__import__') и подобных
-                if isinstance(node.func, ast.Attribute) and node.func.attr in self.FORBIDDEN_FUNCTIONS:
-                    logger.warning(f"Запрещённый атрибут: {node.func.attr}")
-                    return False
-        return True
-
-    async def create_module(self, task: str) -> Optional[str]:
-        try:
-            prompt = f"Создай Python модуль для: {task}. Только код, без markdown. Функция execute()."
-            code = await self.llm.generate(prompt, temperature=0.3)
-            code = re.sub(r'```python|```|`', '', code).strip()
-
-            if not code or not self._is_safe_code(code):
-                logger.warning("Сгенерированный код небезопасен или пуст")
-                return None
-
-            module_name = f"mod_{int(time.time())}"
-            path = self.modules_dir / f"{module_name}.py"
-
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(code)
-
-            spec = importlib.util.spec_from_file_location(module_name, path)
-            if spec and spec.loader:
-                mod = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(mod)
-                self.loaded_modules[module_name] = mod
-                logger.info(f"✅ Модуль {module_name} создан и загружен")
-                return module_name
-        except Exception as e:
-            logger.error(f"Ошибка создания модуля: {e}\n{traceback.format_exc()}")
-            return None
-
-
-
-# ──────────────────────────────────────────────────────────────
-# 🔗 TEACHER LLM (✅ ИСПРАВЛЕН: ленивая инициализация сессии)
-# ──────────────────────────────────────────────────────────────
 class TeacherLLM:
-    def __init__(self, url: str, key: str):
-        self.url = url
-        self.key = key
-        self._session: Optional[aiohttp.ClientSession] = None
-        self._connected = False
+    def __init__(self, url: str, api_key: str):
+        self.url, self.api_key, self._session, self.total_calls = url, api_key, None, 0
 
-    async def _get_session(self) -> aiohttp.ClientSession:
-        """🔧 Создаёт сессию ТОЛЬКО в текущем запущенном event loop"""
-        if self._session is not None and not self._session.closed:
-            return self._session
-
-        timeout = CONFIG.get_aiohttp_timeout()
-        connector = aiohttp.TCPConnector(
-            limit=5,
-            ttl_dns_cache=300,
-            force_close=False,
-            keepalive_timeout=30
-        )
-        self._session = aiohttp.ClientSession(timeout=timeout, connector=connector)
-        self._connected = True
-        logger.info("✅ Сессия aiohttp создана в активном QEventLoop")
-        return self._session
+    async def connect(self):
+        if not self._session:
+            import aiohttp
+            self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60))
 
     async def close(self):
-        if self._session and not self._session.closed:
+        if self._session:
             await self._session.close()
-            self._session = None
-            self._connected = False
-            logger.info("🔌 Сессия LM Studio закрыта")
 
-    async def _parse_response(self, resp: aiohttp.ClientResponse, raw_text: str) -> Optional[str]:
-        """🔧 Парсинг ответа (без изменений)"""
-        if not raw_text or not raw_text.strip():
-            return None
+    async def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 500) -> Tuple[str, List[float]]:
+        if not self._session:
+            await self.connect()
+        self.total_calls += 1
         try:
-            data = json.loads(raw_text)
-            if "error" in data:
-                logger.error(f"❌ LM Studio error: {data['error']}")
-                return None
-            if 'choices' not in data or not data['choices']:
-                return None
-            message = data['choices'][0].get('message')
-            if not message or not isinstance(message, dict):
-                return None
-            content = message.get('content')
-            if isinstance(content, str) and content.strip():
-                return content.strip()
-            reasoning = message.get('reasoning_content')
-            if isinstance(reasoning, str) and reasoning.strip():
-                if CONFIG.debug_mode:
-                    logger.debug("🧠 Используем reasoning_content как fallback")
-                return re.sub(r'^Thinking Process:\s*', '', reasoning.strip())
-            delta = data['choices'][0].get('delta', {})
-            if delta and isinstance(delta, dict):
-                delta_content = delta.get('content')
-                if isinstance(delta_content, str) and delta_content.strip():
-                    return delta_content.strip()
-            if CONFIG.debug_mode:
-                logger.warning(f"⚠️ Нет контента. Message: {json.dumps(message, ensure_ascii=False)[:200]}")
-            return None
-        except json.JSONDecodeError:
-            match = re.search(r'"content"\s*:\s*"((?:[^"\\]|\\.)*)"', raw_text)
-            if match:
-                return match.group(1).replace('\\n', '\n').replace('\\"', '"').strip()
-            return None
+            async with self._session.post(self.url, json={"messages": [{"role": "user", "content": prompt}],
+                                                          "temperature": temperature, "max_tokens": max_tokens,
+                                                          "stream": False},
+                                          headers={"Authorization": f"Bearer {self.api_key}",
+                                                   "Content-Type": "application/json"}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return data.get('choices', [{}])[0].get('message', {}).get('content', '').strip(), []
+                return "", []
         except Exception as e:
-            if CONFIG.debug_mode:
-                logger.error(f"❌ Ошибка парсинга: {type(e).__name__}: {e}")
-            return None
-
-    async def generate(self, prompt: str, system_prompt: str = "",
-                       temperature: float = 0.7, max_tokens: int = 2048) -> str:
-        """🔧 Генерация с ленивой сессией и корректным таймаутом"""
-        session = await self._get_session()
-
-        messages = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": prompt})
-
-        payload = {
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": True,
-            "model": os.getenv('LM_MODEL', 'local-model')
-        }
-        headers = {"Content-Type": "application/json"}
-        if self.key and self.key != "lm-studio" and self.key.strip():
-            headers["Authorization"] = f"Bearer {self.key}"
-
-        # 🔥 ВОССТАНОВЛЕНО: получаем таймаут из конфига
-        timeout = CONFIG.get_aiohttp_timeout()
-
-        last_error = None
-        for attempt in range(CONFIG.max_retries):
-            try:
-                if CONFIG.debug_mode:
-                    logger.debug(f"📤 Запрос (попытка {attempt + 1}/{CONFIG.max_retries}): {prompt[:100]}...")
-
-                async with session.post(self.url, json=payload, headers=headers, timeout=timeout) as resp:
-                    raw_text = await resp.text()
-                    if CONFIG.debug_mode:
-                        logger.debug(f"📥 Ответ {resp.status} ({len(raw_text)} байт): {raw_text[:300]}...")
-
-                    if resp.status == 200:
-                        content = await self._parse_response(resp, raw_text)
-                        if content:
-                            return content
-                        last_error = "Empty content"
-                    else:
-                        last_error = f"HTTP {resp.status}"
-            except asyncio.TimeoutError:
-                last_error = f"Timeout (попытка {attempt + 1})"
-            except aiohttp.ClientConnectionError as e:
-                last_error = f"ConnectionError: {e}"
-                self._session = None  # Сброс сессии при обрыве
-            except Exception as e:
-                last_error = f"Exception: {type(e).__name__}: {e}"
-                if CONFIG.debug_mode:
-                    logger.debug(traceback.format_exc())
-
-            if attempt < CONFIG.max_retries - 1:
-                delay = CONFIG.retry_delay_base * (2 ** attempt) + np.random.uniform(0, 1)
-                await asyncio.sleep(delay)
-
-        logger.error(f"❌ Не удалось получить ответ после {CONFIG.max_retries} попыток. Ошибка: {last_error}")
-        return f"⚠️ Ошибка связи с моделью: {last_error}"
+            logger.error(f"Teacher LLM error: {e}")
+            return "", []
 
 
-# ──────────────────────────────────────────────────────────────
-# 🎓 TRAINER (без изменений)
-# ──────────────────────────────────────────────────────────────
-class HybridTrainer:
-    def __init__(self, model: HybridTransformer, tokenizer: HybridBPETokenizer, device: str):
-        self.model = model.to(device)
-        self.tokenizer = tokenizer
-        self.device = device
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=CONFIG.learning_rate)
-        self.scaler = torch.cuda.amp.GradScaler() if CONFIG.mixed_precision and torch.cuda.is_available() else None
+# ══════════════════════════════════════════════════════════════
+# 🎓 TRAINER (сокращен)
+# ══════════════════════════════════════════════════════════════
 
-    async def train_step(self, prompt: str, response: str):
-        try:
-            self.model.train()
-            text = f"{prompt} {response}"
-            input_ids = self.tokenizer.encode(text, max_length=CONFIG.max_seq_length)
+class AdvancedDistillationTrainer:
+    def __init__(self, student_model: AdvancedStudentTransformer, tokenizer: AdvancedBPETokenizer, device: str = 'cpu'):
+        self.student, self.tokenizer, self.device = student_model.to(device), tokenizer, device
+        self.optimizer = torch.optim.AdamW(self.student.parameters(), lr=CONFIG.learning_rate, weight_decay=0.01)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, T_0=100, T_mult=2)
+        self.scaler = torch.cuda.amp.GradScaler() if CONFIG.mixed_precision else None
+        self.replay_buffer = deque(maxlen=CONFIG.replay_buffer_size)
+        self.training_steps, self.losses_history = 0, deque(maxlen=1000)
 
-            if len(input_ids) < 2:
-                return
+    def add_to_replay_buffer(self, prompt: str, teacher_response: str):
+        self.replay_buffer.append({'prompt': prompt, 'response': teacher_response, 'timestamp': time.time()})
 
-            tensor = torch.tensor([input_ids], dtype=torch.long, device=self.device)
-            labels = tensor[:, 1:].clone()
-            inputs = tensor[:, :-1]
+    async def train_on_interaction(self, prompt: str, teacher_response: str) -> float:
+        self.student.train()
+        text = f"{prompt} {teacher_response}"
+        input_ids = self.tokenizer.encode(text, max_length=CONFIG.max_seq_length)
+        input_tensor = torch.tensor([input_ids], dtype=torch.long, device=self.device)
+        labels, input_for_model = input_tensor[:, 1:].clone(), input_tensor[:, :-1]
 
-            if self.scaler and self.device == 'cuda':
-                with torch.cuda.amp.autocast():
-                    logits = self.model(inputs)
-                    loss = F.cross_entropy(
-                        logits.view(-1, logits.size(-1)),
-                        labels.view(-1),
-                        ignore_index=0
-                    )
-                self.scaler.scale(loss).backward()
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
-            else:
-                logits = self.model(inputs)
-                loss = F.cross_entropy(
-                    logits.view(-1, logits.size(-1)),
-                    labels.view(-1),
-                    ignore_index=0
-                )
-                loss.backward()
-                self.optimizer.step()
-            self.optimizer.zero_grad()
-        except Exception as e:
-            logger.debug(f"Ошибка обучения (некритично): {e}")
+        if self.scaler:
+            with torch.cuda.amp.autocast():
+                logits = self.student(input_for_model, return_logits=True)
+                loss = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1), ignore_index=0)
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+        else:
+            logits = self.student(input_for_model, return_logits=True)
+            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1), ignore_index=0)
+            loss.backward()
+            self.optimizer.step()
+
+        self.optimizer.zero_grad()
+        self.scheduler.step()
+        self.training_steps += 1
+        self.losses_history.append(loss.item())
+        return loss.item()
 
 
-# ──────────────────────────────────────────────────────────────
-# 🤖 HYBRID AGENT (исправленная логика)
-# ──────────────────────────────────────────────────────────────
-class HybridAutonomousAgent:
-    def __init__(self, teacher: TeacherLLM):
-        self.user_id = "local_user"
-        self.teacher = teacher
-        self.tokenizer = HybridBPETokenizer(CONFIG.vocab_size)
+# ══════════════════════════════════════════════════════════════
+# 🤖 ADVANCED AUTONOMOUS AGENT
+# ══════════════════════════════════════════════════════════════
 
-        # Инициализация модели
-        try:
-            self.model = HybridTransformer(
-                CONFIG.vocab_size, CONFIG.d_model, CONFIG.n_heads,
-                CONFIG.n_layers, CONFIG.d_ff, CONFIG.max_seq_length, CONFIG.dropout
-            )
-            logger.info("✅ Локальная модель Transformer создана")
-        except Exception as e:
-            logger.error(f"❌ Ошибка создания модели: {e}")
-            raise
-
-        self.trainer = HybridTrainer(self.model, self.tokenizer, CONFIG.device)
-
-        # Эмбеддинг
-        self.embed_model = self._init_embed_model()
-
-        def embed_func(text: str) -> np.ndarray:
-            return self._compute_embedding(text)
-
-        self.memory = CognitiveMemorySystem(embed_func)
-        self.soma = SomatosensorySystem()
-        self.self_mod = SelfModificationEngine(
-            teacher,
-            CONFIG.base_dir / 'modules' / 'custom' / self.user_id
-        )
-
-        self.user_dir = CONFIG.base_dir / 'models' / self.user_id
+class AdvancedAutonomousAgent:
+    def __init__(self, user_id: str, teacher: TeacherLLM):
+        self.user_id, self.teacher = user_id, teacher
+        self.tokenizer = AdvancedBPETokenizer(vocab_size=CONFIG.vocab_size)
+        self.student_model = AdvancedStudentTransformer(vocab_size=CONFIG.vocab_size, d_model=CONFIG.d_model,
+                                                        n_heads=CONFIG.n_heads, n_layers=CONFIG.n_layers,
+                                                        d_ff=CONFIG.d_ff, max_seq_length=CONFIG.max_seq_length,
+                                                        dropout=CONFIG.dropout, use_temporal=CONFIG.temporal_embeddings,
+                                                        time_dim=CONFIG.time_embedding_dim)
+        self.trainer = AdvancedDistillationTrainer(self.student_model, self.tokenizer, device=CONFIG.device)
+        self.rag = None  # ChromaDB опционально
+        self.teacher_usage_probability, self.autonomy_level = CONFIG.initial_teacher_usage, 0.0
+        self.total_interactions, self.teacher_calls, self.autonomous_responses, self.successful_autonomous = 0, 0, 0, 0
+        self.user_dir = CONFIG.base_dir / 'models' / user_id
         self.user_dir.mkdir(parents=True, exist_ok=True)
         self._load_state()
+        logger.info(f"🚀 Agent v3 for {user_id} | Model: {self._count_parameters() / 1e6:.1f}M params")
 
-        # Фоновая петля
-        self.is_active = True
-        self.thought_task: Optional[asyncio.Task] = None
-        self.new_thought_signal = None
-
-        logger.info("🚀 Агент инициализирован")
-
-    def _init_embed_model(self):
-        try:
-            from sentence_transformers import SentenceTransformer
-            model = SentenceTransformer('all-MiniLM-L6-v2', device=CONFIG.device)
-            logger.info("✅ SentenceTransformer загружен")
-            return model
-        except ImportError:
-            logger.warning("⚠️ sentence-transformers не найден, используется fallback")
-            return None
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка загрузки эмбеддинга: {e}")
-            return None
-
-    def _compute_embedding(self, text: str) -> np.ndarray:
-        if self.embed_model is not None:
-            try:
-                return self.embed_model.encode(text, convert_to_numpy=True, show_progress_bar=False)
-            except:
-                pass
-        # Fallback
-        tokens = self.tokenizer.encode(text, max_length=50)
-        emb = np.zeros(CONFIG.embedding_dim)
-        for i, t in enumerate(tokens[:CONFIG.embedding_dim]):
-            emb[i] = t / CONFIG.vocab_size
-        return emb
+    def _count_parameters(self) -> int:
+        return sum(p.numel() for p in self.student_model.parameters())
 
     def _load_state(self):
-        try:
-            model_path = self.user_dir / 'model.pt'
-            if model_path.exists():
-                self.model.load_state_dict(
-                    torch.load(model_path, map_location=CONFIG.device, weights_only=True)
-                )
-                logger.info("✅ Модель загружена")
-        except Exception as e:
-            logger.warning(f"⚠️ Не удалось загрузить модель: {e}")
-
-        try:
-            mem_path = self.user_dir / 'memory.pkl.gz'
-            self.memory.load(mem_path)
-        except:
-            pass
-
-        self.tokenizer.load(self.user_dir)
+        if (self.user_dir / 'student_model.pt').exists():
+            try:
+                checkpoint = torch.load(self.user_dir / 'student_model.pt', map_location=CONFIG.device)
+                self.student_model.load_state_dict(checkpoint['model_state_dict'])
+                self.trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                self.total_interactions, self.teacher_calls, self.autonomous_responses, self.autonomy_level, self.teacher_usage_probability = checkpoint.get(
+                    'total_interactions', 0), checkpoint.get('teacher_calls', 0), checkpoint.get('autonomous_responses',
+                                                                                                 0), checkpoint.get(
+                    'autonomy_level', 0.0), checkpoint.get('teacher_usage_probability', CONFIG.initial_teacher_usage)
+                logger.info(f"✅ Loaded: {self.total_interactions} interactions, autonomy={self.autonomy_level:.1%}")
+            except Exception as e:
+                logger.error(f"Load failed: {e}")
 
     def _save_state(self):
-        try:
-            torch.save(self.model.state_dict(), self.user_dir / 'model.pt')
-            self.memory.save(self.user_dir / 'memory.pkl.gz')
-            self.tokenizer.save(self.user_dir)
-            logger.debug("💾 Состояние сохранено")
-        except Exception as e:
-            logger.error(f"❌ Ошибка сохранения: {e}")
+        torch.save({'model_state_dict': self.student_model.state_dict(),
+                    'optimizer_state_dict': self.trainer.optimizer.state_dict(),
+                    'total_interactions': self.total_interactions, 'teacher_calls': self.teacher_calls,
+                    'autonomous_responses': self.autonomous_responses, 'autonomy_level': self.autonomy_level,
+                    'teacher_usage_probability': self.teacher_usage_probability}, self.user_dir / 'student_model.pt')
+        self.tokenizer.save(self.user_dir / 'tokenizer')
 
-    async def start_thinking(self):
-        if not self.thought_task or self.thought_task.done():
-            self.is_active = True
-            self.thought_task = asyncio.create_task(self._background_think_loop())
-            logger.info("🧠 Фоновое мышление запущено")
+    def _should_use_teacher(self) -> bool:
+        return np.random.random() < self.teacher_usage_probability
 
-    async def stop_thinking(self):
-        self.is_active = False
-        if self.thought_task and not self.thought_task.done():
-            self.thought_task.cancel()
-            try:
-                await self.thought_task
-            except asyncio.CancelledError:
-                pass
-        logger.info("🛑 Фоновое мышление остановлено")
+    def _update_autonomy(self, was_successful: bool):
+        if was_successful:
+            self.autonomy_level = min(1.0, self.autonomy_level + CONFIG.autonomy_growth_rate)
+            self.successful_autonomous += 1
+        else:
+            self.autonomy_level = max(0.0, self.autonomy_level - CONFIG.autonomy_growth_rate * 0.5)
+        self.teacher_usage_probability = max(CONFIG.min_teacher_usage, 1.0 - self.autonomy_level)
 
-    async def _background_think_loop(self):
-        await asyncio.sleep(3)
-        while self.is_active:
-            try:
-                if self.soma.should_initiate_action():
-                    topic = await self._select_thought_topic()
-                    thought = await self._generate_internal_thought(topic)
-                    if thought and await self._verify_truth(thought):
-                        self.memory.add_episode(
-                            f"THOUGHT: {thought}",
-                            importance=0.8,
-                            emotional_valence=0.2
-                        )
-                        if self.new_thought_signal:
-                            self.new_thought_signal.emit(thought)
-
-                        if CONFIG.self_modification_enabled and "алгоритм" in thought.lower():
-                            await self.self_mod.create_module(thought)
-
-                # Случайный интервал для "размышлений"
-                await asyncio.sleep(np.random.uniform(20, 60))
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"Ошибка в фоновом мышлении: {e}")
-                await asyncio.sleep(10)
-
-    async def _select_thought_topic(self) -> str:
-        if self.memory.semantic and np.random.random() < 0.3:
-            concept = np.random.choice(list(self.memory.semantic.keys()))
-            return f"Исследовать: {concept}"
-
-        recent = list(self.memory.working_memory)[-3:]
-        state_desc = f"Состояние: {self.soma.get_state()}. Контекст: {' | '.join(recent)}"
-        prompt = f"Автономный разум. Сформулируй вопрос для размышления (1 предложение): {state_desc}"
-
-        try:
-            topic = await self.teacher.generate(
-                prompt,
-                system_prompt="Ты генератор внутренних вопросов.",
-                temperature=0.9,
-                max_tokens=100
-            )
-            return topic if topic and len(topic) > 10 else "Что я могу улучшить в своём мышлении?"
-        except:
-            return "Какова природа моего существования?"
-
-    async def _generate_internal_thought(self, topic: str) -> str:
-        prompt = f"Вопрос: {topic}\nГлубокая мысль:"
-        try:
-            return await self.teacher.generate(
-                prompt,
-                system_prompt="Ты философствующий ИИ. Отвечай одной содержательной фразой.",
-                temperature=0.8,
-                max_tokens=150
-            )
-        except:
-            return ""
-
-    async def _verify_truth(self, thought: str) -> bool:
-        if not thought:
-            return False
-        try:
-            # Проверка противоречий
-            for concept, definition in list(self.memory.semantic.items())[:5]:
-                if concept in thought and len(thought) < 200:
-                    check = f"Определение: {definition}\nУтверждение: {thought}\nПротиворечит? Только Да или Нет."
-                    ans = await self.teacher.generate(check, temperature=0.1, max_tokens=10)
-                    if ans and "Да" in ans:
-                        return False
-
-            # Оценка истинности
-            score_prompt = f"Оцени истинность (только число 0.0-1.0):\n{thought}"
-            score_str = await self.teacher.generate(score_prompt, temperature=0.0, max_tokens=10)
-            match = re.search(r"(\d\.?\d*)", score_str or "")
-            score = float(match.group()) if match else 0.5
-            return score > 0.6
-        except:
-            return True  # По умолчанию доверяем
+    async def generate_autonomous(self, prompt: str) -> Tuple[str, float]:
+        prompt_ids = self.tokenizer.encode(prompt, max_length=CONFIG.max_seq_length // 2)
+        prompt_tensor = torch.tensor([prompt_ids], dtype=torch.long, device=CONFIG.device)
+        generated, confidence = self.student_model.generate(prompt_tensor, max_length=CONFIG.max_seq_length // 2,
+                                                            temperature=0.8,
+                                                            eos_token_id=self.tokenizer.special_tokens.get('<EOS>', 3))
+        return self.tokenizer.decode(generated[0].cpu().tolist(), skip_special=True), confidence
 
     async def process_interaction(self, user_input: str) -> Tuple[str, Dict]:
-        """✅ Улучшенная логика обработки взаимодействия (из v37.0)"""
-        start = time.time()
-        metadata = {'quality': 0.5, 'state': 'Unknown', 'time': 0, 'source': 'unknown'}
+        start_time, self.total_interactions = time.time(), self.total_interactions + 1
+        response, confidence, used_teacher, autonomous_attempt = "", 0.0, False, False
 
-        try:
-            # 1. Получаем контекст из памяти
-            recent_thoughts = [m for m in self.memory.working_memory if str(m).startswith("THOUGHT:")]
-            thought_ctx = "\n".join(recent_thoughts[-2:]) if recent_thoughts else ""
-            mem_context = self.memory.get_context(user_input)
+        use_teacher = self._should_use_teacher()
+        if not use_teacher:
+            autonomous_attempt, self.autonomous_responses = True, self.autonomous_responses + 1
+            response, confidence = await self.generate_autonomous(user_input)
+            if confidence < CONFIG.confidence_threshold:
+                use_teacher = True
 
-            # 2. Формируем промпт
-            full_prompt = f"{mem_context}\n{thought_ctx}\nUser: {user_input}\nAssistant:"
-
-            # 3. Выбираем источник ответа (умное переключение)
-            use_teacher = (
-                    self.soma.current_quality < 0.6 or
-                    len(user_input) > 100 or
-                    '?' in user_input or '!' in user_input
-            )
-
-            response = ""
-            confidence = 0.0
-
-            if not use_teacher:
-                # Локальная модель
-                try:
-                    ids = self.tokenizer.encode(full_prompt, max_length=CONFIG.max_seq_length // 2)
-                    if len(ids) > 3:
-                        tensor = torch.tensor([ids], dtype=torch.long, device=CONFIG.device)
-                        gen, conf = self.model.generate(tensor, max_length=80, temperature=0.8)
-                        response = self.tokenizer.decode(gen[0].cpu().tolist(), skip_special=True)
-                        confidence = conf
-                        metadata['source'] = 'local'
-                except Exception as e:
-                    logger.debug(f"Локальная генерация: {e}")
-                    use_teacher = True
-
-            if use_teacher:
-                # Teacher LLM
-                response = await self.teacher.generate(
-                    full_prompt,
-                    system_prompt="Ты полезный и точный ассистент. Отвечай естественно, 2-4 предложения.",
-                    temperature=0.75,
-                    max_tokens=2048  # ✅ Увеличено для полных ответов
-                )
-                confidence = 1.0 if response and "ошибка" not in response.lower() and "⚠️" not in response else 0.3
-                metadata['source'] = 'teacher'
-
-                # Обучение на успешных ответах
-                if confidence > 0.7 and response:
-                    await self.trainer.train_step(user_input, response)
-
-            # 4. Обновление состояния
-            if response and response.strip():
-                emotion = (confidence - 0.5) * 2
-                self.memory.add_episode(
-                    f"User: {user_input}\nAI: {response}",
-                    confidence,
-                    emotion
-                )
-                self.soma.update(confidence, emotion)
-
-                # Автосохранение
-                if len(self.memory.episodic) % CONFIG.save_frequency == 0:
-                    self._save_state()
+        if use_teacher:
+            self.teacher_calls, used_teacher = self.teacher_calls + 1, True
+            teacher_response, _ = await self.teacher.generate(user_input)
+            if teacher_response:
+                response, confidence = teacher_response, 1.0
+                if self.total_interactions % CONFIG.training_frequency == 0:
+                    await self.trainer.train_on_interaction(user_input, teacher_response)
+                else:
+                    self.trainer.add_to_replay_buffer(user_input, teacher_response)
             else:
-                response = "⚠️ Не удалось сгенерировать ответ"
-                confidence = 0.1
+                response, confidence = "Извините, возникла проблема с генерацией ответа.", 0.0
 
-            # 5. Формируем метаданные
-            metadata.update({
-                'quality': confidence,
-                'state': self.soma.get_state(),
-                'time': time.time() - start,
-                'response_length': len(response)
-            })
+        if autonomous_attempt:
+            self._update_autonomy(confidence >= CONFIG.confidence_threshold)
 
-            logger.info(
-                f"✅ [{self.user_id}] Q={confidence:.0%} | "
-                f"Method={metadata['source']} | "
-                f"State={self.soma.get_state()} | "
-                f"T={metadata['time']:.1f}s"
-            )
+        if self.total_interactions % CONFIG.save_frequency == 0:
+            self._save_state()
 
-            return response, metadata
+        metadata = {'used_teacher': used_teacher, 'autonomous_attempt': autonomous_attempt, 'confidence': confidence,
+                    'autonomy_level': self.autonomy_level, 'teacher_usage_prob': self.teacher_usage_probability,
+                    'response_time': time.time() - start_time,
+                    'training_stats': {'training_steps': self.trainer.training_steps, 'avg_loss': np.mean(
+                        list(self.trainer.losses_history)) if self.trainer.losses_history else 0.0},
+                    'model_size': f"{self._count_parameters() / 1e6:.1f}M"}
 
-        except Exception as e:
-            logger.exception("❌ Критическая ошибка в process_interaction")
-            return f"⚠️ Внутренняя ошибка: {type(e).__name__}", {
-                'quality': 0.0, 'state': 'Error', 'time': time.time() - start, 'source': 'error'
+        logger.info(
+            f"[{self.user_id}] Teacher={'Yes' if used_teacher else 'No'} | Conf={confidence:.2f} | Autonomy={self.autonomy_level:.1%}")
+        return response, metadata
+
+    def get_status(self) -> Dict:
+        return {'user_id': self.user_id, 'model_parameters': self._count_parameters(),
+                'model_size_mb': self._count_parameters() * 4 / 1e6,
+                'autonomy': {'level': self.autonomy_level, 'teacher_usage_probability': self.teacher_usage_probability,
+                             'success_rate': self.successful_autonomous / max(1, self.autonomous_responses)},
+                'interactions': {'total': self.total_interactions, 'teacher_calls': self.teacher_calls,
+                                 'autonomous_responses': self.autonomous_responses,
+                                 'successful_autonomous': self.successful_autonomous},
+                'training': {'training_steps': self.trainer.training_steps, 'avg_loss': np.mean(
+                    list(self.trainer.losses_history)) if self.trainer.losses_history else 0.0,
+                             'replay_buffer_size': len(self.trainer.replay_buffer)},
+                'features': {'rag_enabled': False, 'meta_learning': CONFIG.meta_learning_enabled,
+                             'temporal_embeddings': CONFIG.temporal_embeddings,
+                             'mixed_precision': CONFIG.mixed_precision}}
+
+
+# ══════════════════════════════════════════════════════════════
+# 🌐 FASTAPI WEB SERVER
+# ══════════════════════════════════════════════════════════════
+
+app = FastAPI(title="Advanced AI Agent v3", description="Автономный обучающийся агент", version="3.0")
+
+# CORS для доступа с любого домена
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],
+                   allow_headers=["*"])
+
+# Глобальные объекты
+teacher: Optional[TeacherLLM] = None
+agents: Dict[str, AdvancedAutonomousAgent] = {}
+websocket_connections: Dict[str, Set[WebSocket]] = {}
+
+# HTML интерфейс
+HTML_PAGE = """
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced AI Agent v3 | BlockCoin.ru</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #eee;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00b4d8, #90e0ef);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .subtitle { color: #888; margin-top: 10px; }
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        .chat-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user { justify-content: flex-end; }
+        .message.assistant .avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .message.user .avatar {
+            width: 36px;
+            height: 36px;
+            background: #2d6a4f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.1);
+            word-wrap: break-word;
+        }
+        .message.user .bubble {
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+        }
+        .timestamp {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        input:focus { background: rgba(255,255,255,0.15); }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.02); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .status-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+        }
+        .status-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .status-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .status-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .progress-bar {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #00b4d8, #90e0ef);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        .badge.auto { background: #2d6a4f; }
+        .badge.teacher { background: #9d0208; }
+        .badge.rag { background: #e85d04; }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #666;
+            font-size: 12px;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #888;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        @media (max-width: 768px) {
+            .main-panel { grid-template-columns: 1fr; }
+            .status-panel { order: -1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Advanced AI Agent v3.0</h1>
+            <div class="subtitle">Автономный самообучающийся агент | BPE Tokenizer | Meta-Learning | RAG</div>
+        </header>
+
+        <div class="main-panel">
+            <div class="chat-panel">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="avatar">🤖</div>
+                        <div class="bubble">
+                            Привет! Я — Advanced AI Agent v3.0.<br>
+                            Задавай любые вопросы, я самообучаюсь с каждым диалогом!
+                            <div class="timestamp">Сейчас</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button id="sendBtn" onclick="sendMessage()">Отправить</button>
+                </div>
+            </div>
+
+            <div class="status-panel">
+                <h3 style="margin-bottom: 15px;">📊 Статус агента</h3>
+                <div class="status-item">
+                    <div class="status-label">🎯 Уровень автономности</div>
+                    <div class="status-value" id="autonomyLevel">0%</div>
+                    <div class="progress-bar"><div class="progress-fill" id="autonomyFill" style="width: 0%"></div></div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">👨‍🏫 Вероятность обращения к учителю</div>
+                    <div class="status-value" id="teacherProb">100%</div>
+                    <div class="progress-bar"><div class="progress-fill" id="teacherFill" style="width: 100%"></div></div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">💬 Всего взаимодействий</div>
+                    <div class="status-value" id="totalInteractions">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">🤖 Автономных ответов</div>
+                    <div class="status-value" id="autonomousResponses">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">📚 Размер модели</div>
+                    <div class="status-value" id="modelSize">0M</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">⚡ Текущий ответ</div>
+                    <div class="status-value" id="currentMode">—</div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <a href="https://blockcoin.ru" style="color: #888; text-decoration: none;">BlockCoin.ru</a> | Advanced Autonomous Agent v3.0 | BPE • Meta-Learning • RAG
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let reconnectAttempts = 0;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('✅ WebSocket connected');
+                reconnectAttempts = 0;
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('messageInput').disabled = false;
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'response') {
+                    addMessage('assistant', data.content);
+                    updateStatus(data.metadata);
+                    document.getElementById('sendBtn').disabled = false;
+                    document.getElementById('messageInput').disabled = false;
+                    document.getElementById('messageInput').focus();
+                } else if (data.type === 'status') {
+                    updateStatus(data.metadata);
+                } else if (data.type === 'typing') {
+                    showTypingIndicator();
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected, reconnecting...');
+                document.getElementById('sendBtn').disabled = true;
+                document.getElementById('messageInput').disabled = true;
+                setTimeout(() => connectWebSocket(), Math.min(1000 * Math.pow(2, reconnectAttempts), 30000));
+                reconnectAttempts++;
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function showTypingIndicator() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="bubble typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        function addMessage(role, content) {
+            removeTypingIndicator();
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            const avatar = role === 'assistant' ? '🤖' : '👤';
+            messageDiv.innerHTML = `
+                <div class="avatar">${avatar}</div>
+                <div class="bubble">
+                    ${content}
+                    <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateStatus(metadata) {
+            if (metadata.autonomy_level !== undefined) {
+                const autonomyPercent = (metadata.autonomy_level * 100).toFixed(1);
+                document.getElementById('autonomyLevel').innerHTML = `${autonomyPercent}%`;
+                document.getElementById('autonomyFill').style.width = `${autonomyPercent}%`;
             }
+            if (metadata.teacher_usage_prob !== undefined) {
+                const teacherPercent = (metadata.teacher_usage_prob * 100).toFixed(1);
+                document.getElementById('teacherProb').innerHTML = `${teacherPercent}%`;
+                document.getElementById('teacherFill').style.width = `${teacherPercent}%`;
+            }
+            if (metadata.total_interactions !== undefined) {
+                document.getElementById('totalInteractions').innerHTML = metadata.total_interactions;
+            }
+            if (metadata.autonomous_responses !== undefined) {
+                document.getElementById('autonomousResponses').innerHTML = metadata.autonomous_responses;
+            }
+            if (metadata.model_size) {
+                document.getElementById('modelSize').innerHTML = metadata.model_size;
+            }
+            if (metadata.used_teacher !== undefined) {
+                document.getElementById('currentMode').innerHTML = metadata.used_teacher ? '👨‍🏫 Учитель' : '🤖 Автономный';
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+            addMessage('user', message);
+            input.value = '';
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('messageInput').disabled = true;
+
+            ws.send(JSON.stringify({ type: 'message', content: message }));
+            showTypingIndicator();
+        }
+
+        // Запрос статуса каждые 5 секунд
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'get_status' }));
+            }
+        }, 5000);
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
+"""
 
 
-# ──────────────────────────────────────────────────────────────
-# 🖥️ GUI (улучшенная интеграция)
-# ──────────────────────────────────────────────────────────────
-class AgentSignals(QObject):
-    # ✅ Вернул к 2 аргументам, чтобы совпадало со всеми вызовами
-    new_message = pyqtSignal(str, str)
-    new_thought = pyqtSignal(str)
-    status_update = pyqtSignal(str)
-
-
-class MainWindow(QMainWindow):
-    def __init__(self, agent: HybridAutonomousAgent):
-        super().__init__()
-        self.agent = agent
-        self.signals = AgentSignals()
-        self.agent.new_thought_signal = self.signals.new_thought
-
-        self.setWindowTitle(f"🧠 Hybrid AGI {CONFIG.version}")
-        self.setMinimumSize(900, 700)
-
-        central = QWidget()
-        self.setCentralWidget(central)
-        layout = QVBoxLayout(central)
-
-        # Вкладки
-        self.tabs = QTabWidget()
-        layout.addWidget(self.tabs)
-
-        # Чат
-        chat_widget = QWidget()
-        chat_layout = QVBoxLayout(chat_widget)
-        self.chat_history = QTextEdit()
-        self.chat_history.setReadOnly(True)
-        self.chat_history.setFont(QFont("Segoe UI", 11))
-        self.chat_history.setAcceptRichText(True)
-        chat_layout.addWidget(self.chat_history)
-
-        input_layout = QHBoxLayout()
-        self.input_field = QLineEdit()
-        self.input_field.setPlaceholderText("Введите сообщение... (Enter для отправки)")
-        self.input_field.returnPressed.connect(self.send_message)
-        self.send_btn = QPushButton("➤ Отправить")
-        self.send_btn.clicked.connect(self.send_message)
-        self.send_btn.setFixedWidth(100)
-        input_layout.addWidget(self.input_field)
-        input_layout.addWidget(self.send_btn)
-        chat_layout.addLayout(input_layout)
-
-        self.tabs.addTab(chat_widget, "💬 Диалог")
-
-        # Лог разума
-        thought_widget = QWidget()
-        thought_layout = QVBoxLayout(thought_widget)
-        self.thought_log = QPlainTextEdit()
-        self.thought_log.setReadOnly(True)
-        self.thought_log.setFont(QFont("Consolas", 9))
-        thought_layout.addWidget(self.thought_log)
-        self.tabs.addTab(thought_widget, "🧠 Лог разума")
-
-        # Статус
-        self.status_label = QLabel("🟡 Инициализация...")
-        self.statusBar().addWidget(self.status_label)
-
-        # Сигналы
-        self.signals.new_message.connect(self.append_message)
-        self.signals.new_thought.connect(self.append_thought)
-        self.signals.status_update.connect(self.status_label.setText)
-
-        # Таймер сохранения
-        self.save_timer = QTimer()
-        self.save_timer.timeout.connect(self.save_agent_state)
-        self.save_timer.start(60000)
-
-        self._append_system("🤖 Агент готов. Начинаю фоновое мышление...")
-        self.input_field.setFocus()
-
-    def append_message(self, role: str, content: str):
-        if role == "user":
-            self.chat_history.append(
-                f'<div style="text-align:right; margin:5px;"><b style="color:#2196F3">Вы:</b><br>{content}</div>'
-            )
-        elif role == "system":
-            self.chat_history.append(
-                f'<div style="text-align:center; margin:5px; color:#666; font-style:italic">{content}</div>'
-            )
-        else:
-            self.chat_history.append(
-                f'<div style="text-align:left; margin:5px;"><b style="color:#4CAF50">Агент:</b><br>{content}</div>'
-            )
-        self.chat_history.moveCursor(QTextCursor.MoveOperation.End)
-
-    def append_thought(self, thought: str):
-        if not thought:
-            return
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        self.thought_log.appendPlainText(f"[{timestamp}] {thought}")
-        scrollbar = self.thought_log.verticalScrollBar()
-        scrollbar.setValue(scrollbar.maximum())
-
-    def _append_system(self, msg: str):
-        self.signals.new_message.emit("system", msg)
-
-    def send_message(self):
-        text = self.input_field.text().strip()
-        if not text:
-            return
-
-        self.input_field.setEnabled(False)
-        self.send_btn.setEnabled(False)
-        self.signals.new_message.emit("user", text)
-        self.status_label.setText("🔄 Думаю...")
-        self.input_field.clear()
-
-        # 🔧 Безопасное создание задачи в qasync
-        loop = asyncio.get_event_loop()
-        loop.create_task(self._process_and_display(text))
-
-    async def _process_and_display(self, user_input: str):
-        try:
-            response, meta = await self.agent.process_interaction(user_input)
-            # ✅ Эмитим только 2 аргумента
-            self.signals.new_message.emit("assistant", response)
-            # ✅ Метаданные выводим в статус-бар через отдельный сигнал
-            self.signals.status_update.emit(
-                f"🎯 {meta.get('source', '?')} | Качество: {meta['quality']:.0%} | {meta['state']} | {meta['time']:.2f}с"
-            )
-        except Exception as e:
-            logger.exception("Ошибка обработки сообщения")
-            self.signals.new_message.emit("system", f"⚠️ Ошибка: {e}")
-        finally:
-            self.input_field.setEnabled(True)
-            self.send_btn.setEnabled(True)
-            self.input_field.setFocus()
-
-    def save_agent_state(self):
-        try:
-            self.agent._save_state()
-        except Exception as e:
-            logger.error(f"Ошибка сохранения: {e}")
-
-    def closeEvent(self, event):
-        logger.info("👋 Закрытие приложения...")
-        self.agent.is_active = False
-        if hasattr(self.agent, 'thought_task') and self.agent.thought_task:
-            self.agent.thought_task.cancel()
-
-        self.save_agent_state()
-
-        # ✅ Корректное закрытие сессии
-        if hasattr(self.agent, 'teacher'):
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                asyncio.ensure_future(self.agent.teacher.close())
-            else:
-                loop.run_until_complete(self.agent.teacher.close())
-
-        event.accept()
-
-
-# ──────────────────────────────────────────────────────────────
-# 🚀 MAIN (✅ ИСПРАВЛЕННАЯ ВЕРСИЯ — ЕДИНСТВЕННАЯ)
-# ──────────────────────────────────────────────────────────────
-async def main_async():
-    print(f"""
-    ╔═══════════════════════════════════════════════════════════╗
-    ║  🧠 HYBRID COGNITIVE AGI {CONFIG.version}
-    ║     Transformer + Memory + Self-Mod + Background Thinking  ║
-    ╚═══════════════════════════════════════════════════════════╝
-    Device: {CONFIG.device} | Debug: {CONFIG.debug_mode}
-    """)
-
-    # ✅ 1. СНАЧАЛА инициализируем Qt и QEventLoop
-    # Все async-объекты (aiohttp и др.) создадутся в этом loop
-    app = QApplication(sys.argv)
-    app.setStyle('Fusion')
-
-    from qasync import QEventLoop
-    loop = QEventLoop(app)
-    asyncio.set_event_loop(loop)  # 🔥 Делаем его активным для всего приложения
-
-    if CONFIG.debug_mode:
-        logger.debug(f"🔍 Event loop тип: {type(asyncio.get_event_loop()).__name__}")
-
-    # ✅ 2. Проверка LM Studio (синхронная — безопасна)
-    def check_lm_studio(host: str, port: int, timeout: float = 3.0) -> bool:
-        try:
-            with socket.create_connection((host, port), timeout=timeout):
-                return True
-        except (socket.timeout, ConnectionRefusedError, OSError):
-            return False
-
-    lm_available = False
-    for host in ["127.0.0.1", "localhost"]:
-        if check_lm_studio(host, 1234):
-            logger.info(f"✅ LM Studio обнаружен на {host}:1234")
-            if host == "localhost":
-                CONFIG.lm_studio_url = CONFIG.lm_studio_url.replace("127.0.0.1", "localhost")
-            lm_available = True
-            break
-
-    if not lm_available:
-        logger.warning("⚠️ LM Studio не обнаружен. Агент будет использовать локальную модель.")
-
-    # ✅ 3. Инициализация Teacher LLM (после установки loop!)
+@app.on_event("startup")
+async def startup():
+    global teacher
     teacher = TeacherLLM(CONFIG.lm_studio_url, CONFIG.lm_studio_key)
+    await teacher.connect()
+    logger.info(f"🚀 Server started on {CONFIG.host}:{CONFIG.port}")
 
-    if lm_available:
-        await teacher.connect()
-        try:
-            test = await teacher.generate("Привет", temperature=0.1, max_tokens=50)
-            if test and "ошибка" not in test.lower() and "⚠️" not in test:
-                logger.info(f"✅ LLM отвечает: '{test[:50]}...'")
-            else:
-                logger.warning("⚠️ LLM вернула некорректный ответ")
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка тестового запроса: {e}")
-    else:
-        logger.info("🔌 Работа в офлайн-режиме (только локальная модель)")
 
-    # ✅ 4. Создание агента
-    try:
-        agent = HybridAutonomousAgent(teacher)
-        await agent.start_thinking()
-    except Exception as e:
-        logger.critical(f"❌ Не удалось создать агента: {e}")
-        app.quit()
-        return
-
-    # ✅ 5. Создание и показ окна
-    window = MainWindow(agent)
-    window.show()
-    logger.info("🚀 GUI запущен")
-
-    # ✅ 6. Запуск цикла событий
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        logger.info("🛑 Прервано пользователем")
-    finally:
-        # Корректная очистка
-        await agent.stop_thinking()
+@app.on_event("shutdown")
+async def shutdown():
+    if teacher:
         await teacher.close()
-        agent._save_state()
-        loop.close()
-        logger.info("💾 Состояние сохранено. Выход.")
+    logger.info("👋 Server shutdown")
 
 
-# ──────────────────────────────────────────────────────────────
-# 🚀 MAIN (исправленная последовательность инициализации)
-# ──────────────────────────────────────────────────────────────
-async def main_async():
-    print(f"""
-    ╔═══════════════════════════════════════════════════════════╗
-    ║  🧠 HYBRID COGNITIVE AGI {CONFIG.version}
-    ║     Transformer + Memory + Self-Mod + Background Thinking  ║
-    ╚═══════════════════════════════════════════════════════════╝
-    Device: {CONFIG.device} | Debug: {CONFIG.debug_mode}
-    """)
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    return HTMLResponse(HTML_PAGE)
 
-    # ✅ 1. СНАЧАЛА инициализируем Qt и QEventLoop
-    # Все последующие async-объекты (включая aiohttp) будут привязаны к этому циклу
-    app = QApplication(sys.argv)
-    app.setStyle('Fusion')
-    from qasync import QEventLoop
-    loop = QEventLoop(app)
-    asyncio.set_event_loop(loop)  # Делаем его активным для всего приложения
 
-    # ✅ 2. Проверка LM Studio (синхронная, безопасна)
-    import socket
-    def check_lm_studio(host: str, port: int, timeout: float = 3.0) -> bool:
-        try:
-            with socket.create_connection((host, port), timeout=timeout):
-                return True
-        except (socket.timeout, ConnectionRefusedError, OSError):
-            return False
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "device": CONFIG.device, "model_size": f"{CONFIG.n_layers}L-{CONFIG.d_model}D"}
 
-    lm_available = False
-    for host in ["127.0.0.1", "localhost"]:
-        if check_lm_studio(host, 1234):
-            logger.info(f"✅ LM Studio обнаружен на {host}:1234")
-            if host == "localhost":
-                CONFIG.lm_studio_url = CONFIG.lm_studio_url.replace("127.0.0.1", "localhost")
-            lm_available = True
-            break
 
-    if not lm_available:
-        logger.warning("⚠️ LM Studio не обнаружен. Агент будет использовать локальную модель.")
+@app.get("/status/{user_id}")
+async def get_user_status(user_id: str):
+    if user_id in agents:
+        return agents[user_id].get_status()
+    return {"error": "User not found"}
 
-    # ✅ 3. Инициализация Teacher LLM (без раннего connect!)
-    teacher = TeacherLLM(CONFIG.lm_studio_url, CONFIG.lm_studio_key)
 
-    if lm_available:
-        # Сессия создастся автоматически при первом запросе из GUI
-        logger.info("✅ LM Studio готов к работе (ленивое подключение)")
-    else:
-        logger.info("🔌 Работа в офлайн-режиме (только локальная модель)")
+@app.post("/reset/{user_id}")
+async def reset_user(user_id: str):
+    if user_id in agents:
+        # Сохраняем бэкап
+        agents[user_id]._save_state()
+        # Удаляем и создадим заново при следующем запросе
+        del agents[user_id]
+    return {"status": "reset", "user_id": user_id}
 
-    # ✅ 4. Создание агента
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
+    # Получаем user_id из query параметра или генерируем по IP
+    user_id = websocket.query_params.get("user_id", f"user_{id(websocket)}")
+
+    if user_id not in agents:
+        agents[user_id] = AdvancedAutonomousAgent(user_id, teacher)
+
+    # Сохраняем соединение
+    if user_id not in websocket_connections:
+        websocket_connections[user_id] = set()
+    websocket_connections[user_id].add(websocket)
+
     try:
-        agent = HybridAutonomousAgent(teacher)
-        await agent.start_thinking()
+        # Отправляем текущий статус
+        status = agents[user_id].get_status()
+        await websocket.send_json({"type": "status", "metadata": status})
+
+        while True:
+            data = await websocket.receive_text()
+            try:
+                msg = json.loads(data)
+
+                if msg.get("type") == "message":
+                    user_input = msg.get("content", "")
+                    if user_input:
+                        response, metadata = await agents[user_id].process_interaction(user_input)
+
+                        # Отправляем ответ этому клиенту
+                        await websocket.send_json({
+                            "type": "response",
+                            "content": response,
+                            "metadata": metadata
+                        })
+
+                        # Обновляем статус для всех соединений этого пользователя
+                        for conn in websocket_connections[user_id]:
+                            if conn != websocket:
+                                try:
+                                    await conn.send_json({"type": "status", "metadata": agents[user_id].get_status()})
+                                except:
+                                    pass
+
+                elif msg.get("type") == "get_status":
+                    await websocket.send_json({
+                        "type": "status",
+                        "metadata": agents[user_id].get_status()
+                    })
+
+            except json.JSONDecodeError:
+                await websocket.send_json({"type": "error", "content": "Invalid JSON"})
+
+    except WebSocketDisconnect:
+        websocket_connections[user_id].discard(websocket)
+        if not websocket_connections[user_id]:
+            # Сохраняем состояние при отключении последнего соединения
+            agents[user_id]._save_state()
     except Exception as e:
-        logger.critical(f"❌ Не удалось создать агента: {e}")
-        app.quit()
-        return
+        logger.error(f"WebSocket error: {e}")
+        websocket_connections[user_id].discard(websocket)
 
-    # ✅ 5. Создание и показ окна
-    window = MainWindow(agent)
-    window.show()
-    logger.info("🚀 GUI запущен")
 
-    # ✅ 6. Запуск цикла событий
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        logger.info("🛑 Прервано пользователем")
-    finally:
-        # Корректная очистка
-        await agent.stop_thinking()
-        await teacher.close()
-        agent._save_state()
-        loop.close()
-        logger.info("💾 Состояние сохранено. Выход.")
+# ══════════════════════════════════════════════════════════════
+# 🚀 MAIN
+# ══════════════════════════════════════════════════════════════
 
-# ──────────────────────────────────────────────────────────────
-# 🚀 ENTRY POINT
-# ──────────────────────────────────────────────────────────────
+async def main():
+    print("""
+╔═══════════════════════════════════════════════════════════════╗
+║  🚀 ADVANCED AUTONOMOUS AGENT v3.0                            ║
+║     Веб-версия для blockcoin.ru                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🔥 НОВЫЕ ВОЗМОЖНОСТИ v3:
+
+✅ УВЕЛИЧЕННАЯ МОДЕЛЬ | BPE TOKENIZER | RAG | META-LEARNING
+✅ ВЕБ-ИНТЕРФЕЙС | WEBSOCKETS | РЕАЛЬНОЕ ВРЕМЯ
+
+🎮 УСТРОЙСТВО: {CONFIG.device.upper()}
+📊 МОДЕЛЬ: {CONFIG.n_layers}L-{CONFIG.d_model}D-{CONFIG.n_heads}H
+🌐 СЕРВЕР: http://{CONFIG.host}:{CONFIG.port}
+""")
+
+    config = uvicorn.Config(app, host=CONFIG.host, port=CONFIG.port, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
+
+
 if __name__ == "__main__":
-    # Подавление предупреждений
-    warnings.filterwarnings("ignore", message=".*pynvml.*")
-    warnings.filterwarnings("ignore", message=".*torch.cuda.*")
-
     try:
-        # ✅ asyncio.run() теперь безопасен благодаря WindowsSelectorEventLoopPolicy
-        asyncio.run(main_async())
+        asyncio.run(main())
     except KeyboardInterrupt:
         print("\n👋 До встречи!")
     except Exception as e:
-        print(f"\n❌ Критическая ошибка: {e}")
+        print(f"❌ Ошибка: {e}")
+        import traceback
+
         traceback.print_exc()
-        sys.exit(1)
