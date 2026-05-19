@@ -5,6 +5,7 @@
 import json
 import time
 import asyncio
+import traceback
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Dict, Optional, Set
@@ -22,10 +23,13 @@ from config import CONFIG
 from logging_setup import setup_logging
 from models.teacher import TeacherLLM
 from agent import AdvancedAutonomousAgent
+import socket
+import asyncio
 
 load_dotenv()
 
 logger = setup_logging(CONFIG.base_dir)
+asyncio.get_running_loop().set_exception_handler(lambda loop, ctx: None)
 
 # ════════════════════════════════════════════════════════════════
 # 🛡️ SECURITY MIDDLEWARE (Windows compatible)
@@ -96,6 +100,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 # Security middleware
 @app.middleware("http")
@@ -250,12 +256,20 @@ async def ws_endpoint(websocket: WebSocket):
         logger.error(f"WebSocket error: {exc}")
         ws_connections[user_id].discard(websocket)
 
+
 # ════════════════════════════════════════════════════════════════
 # 🚀 MAIN
 # ════════════════════════════════════════════════════════════════
 
+# Убираем отсюда обработчик событий - он должен быть внутри event loop
+
 async def _serve():
-    cfg = uvicorn.Config(app, host=CONFIG.host, port=CONFIG.port, log_level="info")
+    cfg = uvicorn.Config(
+        app,
+        host=CONFIG.host,
+        port=CONFIG.port,
+        log_level="info",
+    )
     await uvicorn.Server(cfg).serve()
 
 if __name__ == "__main__":
@@ -265,4 +279,4 @@ if __name__ == "__main__":
         print("\n👋 До встречи!")
     except Exception as exc:
         print(f"❌ Ошибка: {exc}")
-        import traceback; traceback.print_exc()
+        traceback.print_exc()
