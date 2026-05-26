@@ -29,7 +29,7 @@ import asyncio
 load_dotenv()
 
 logger = setup_logging(CONFIG.base_dir)
-asyncio.get_running_loop().set_exception_handler(lambda loop, ctx: None)
+
 
 # ════════════════════════════════════════════════════════════════
 # 🛡️ SECURITY MIDDLEWARE (Windows compatible)

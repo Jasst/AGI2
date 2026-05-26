@@ -18,7 +18,7 @@ class AdvancedConfig:
 
     # === Server ===
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 5000
 
     # === Transformer Architecture ===
     vocab_size: int = 50_000
